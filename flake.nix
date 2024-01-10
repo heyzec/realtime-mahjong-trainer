@@ -17,7 +17,7 @@ outputs = { self, nixpkgs, flake-utils }:
       buildToolsVersion = "34.0.0";
       androidComposition = pkgs.androidenv.composeAndroidPackages {
         buildToolsVersions = [ buildToolsVersion ];
-        platformVersions = [ "33" "34" "32" ];
+        platformVersions = [ "33" "34" "32" "31" ];
         # abiVersions = [ "armeabi-v7a" "arm64-v8a" ];
       };
       androidSdk = androidComposition.androidsdk;
