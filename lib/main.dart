@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:system_alert_window/system_alert_window.dart';
 
+// import 'package:flutter_screen_recording/flutter_screen_recording.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
@@ -81,7 +83,13 @@ class _MyAppState extends State<MyApp> {
     await SystemAlertWindow.requestPermissions(prefMode: prefMode);
   }
 
-  void _showOverlayWindow() {
+  void _showOverlayWindow() async {
+    Future.delayed(Duration(seconds: 2), () {
+      // FlutterScreenRecording.startRecordScreen("mytestvideo.webm");
+    });
+    Future.delayed(Duration(seconds: 10), () {
+      // FlutterScreenRecording.stopRecordScreen;
+    });
     if (!_isShowingWindow) {
       SystemWindowHeader header = SystemWindowHeader(
           title: SystemWindowText(
@@ -369,4 +377,5 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
 
