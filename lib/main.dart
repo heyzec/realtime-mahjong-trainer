@@ -123,3 +123,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+
+// overlay entry point
+@pragma("vm:entry-point")
+void overlayMain() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Material(child: Text("My overlay"))
+  ));
+}
+
