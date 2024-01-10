@@ -23,6 +23,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin flutter_foreground_task, com.pravera.flutter_foreground_task.FlutterForegroundTaskPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin flutter_overlay_window, flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin", e);
+    }
+    try {
       com.isvisoft.flutter_screen_recording.FlutterScreenRecordingPlugin.registerWith(shimPluginRegistry.registrarFor("com.isvisoft.flutter_screen_recording.FlutterScreenRecordingPlugin"));
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin flutter_screen_recording, com.isvisoft.flutter_screen_recording.FlutterScreenRecordingPlugin", e);
@@ -51,11 +56,6 @@ public final class GeneratedPluginRegistrant {
       flutterEngine.getPlugins().add(new io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin shared_preferences_android, io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin", e);
-    }
-    try {
-      flutterEngine.getPlugins().add(new in.jvapps.system_alert_window.SystemAlertWindowPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin system_alert_window, in.jvapps.system_alert_window.SystemAlertWindowPlugin", e);
     }
   }
 }
