@@ -15,20 +15,9 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
   String _batteryLevel = 'Unknown battery level.';
 
   Future<void> _getBatteryLevel() async {
-    String batteryLevel;
-    setState(() {
-      _batteryLevel = "maybe?";
-    });
     try {
-      final result = await platform.invokeMethod<int>('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
-    } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
-    }
-
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
+      final result = await platform.invokeMethod<int>('startRecording');
+    } on PlatformException catch (e) {}
   }
 
   @override

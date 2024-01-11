@@ -42,21 +42,21 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _getBatteryLevel() async {
-    String batteryLevel;
-    setState(() {
-      _batteryLevel = "maybe?";
-    });
+  Future<void> recordForAWhile() async {
     try {
-      final result = await platform.invokeMethod<int>('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
+      print("Going to start");
+      await platform.invokeMethod<int>('startRecording');
+      print("start");
+      await Future.delayed(Duration(seconds: 10), () async {
+        print("going to stop");
+        await platform.invokeMethod<int>('stopRecording');
+        print("stop");
+      });
     } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
+      print(e);
+    } on Exception catch (e) {
+      print(e);
     }
-
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
   }
 
   void start() async {
@@ -73,16 +73,12 @@ class _HomePageState extends State<HomePage> {
       width: WindowSize.matchParent,
     );
 
-    loopRecord();
+    // loopRecord();
   }
 
   void loopRecord() async {
     while (true) {
       await FlutterScreenRecording.startRecordScreen("video");
-      await Future.delayed(Duration(seconds: 10), () async {
-        String path = await FlutterScreenRecording.stopRecordScreen;
-        print(path);
-      });
     }
   }
 
@@ -99,7 +95,7 @@ class _HomePageState extends State<HomePage> {
             child: const Text("Show Overlay"),
           ),
           TextButton(
-            onPressed: _getBatteryLevel,
+            onPressed: recordForAWhile,
             child: Text(_batteryLevel),
           ),
         ])));
