@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   SendPort? homePort;
   String? latestMessageFromOverlay;
 
-  static const platform = MethodChannel('samples.flutter.dev/battery');
+  static const platform = MethodChannel('com.example.realtime_mahjong_trainer/stream');
 
   String _batteryLevel = 'Unknown battery level.';
 
@@ -45,13 +45,13 @@ class _HomePageState extends State<HomePage> {
   Future<void> recordForAWhile() async {
     try {
       print("Going to start");
-      await platform.invokeMethod<int>('startRecording');
+      await platform.invokeMethod<int>('startStream');
       print("start");
-      await Future.delayed(Duration(seconds: 10), () async {
-        print("going to stop");
-        await platform.invokeMethod<int>('stopRecording');
-        print("stop");
-      });
+      // await Future.delayed(Duration(seconds: 10), () async {
+      //   print("going to stop");
+      //   await platform.invokeMethod<int>('stopRecording');
+      //   print("stop");
+      // });
     } on PlatformException catch (e) {
       print(e);
     } on Exception catch (e) {
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
           ),
           TextButton(
             onPressed: recordForAWhile,
-            child: Text(_batteryLevel),
+            child: Text("Start Streaming"),
           ),
         ])));
 
