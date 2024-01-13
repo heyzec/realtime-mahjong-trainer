@@ -25,7 +25,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 public class MainActivity extends FlutterActivity {
 
@@ -46,6 +48,8 @@ public class MainActivity extends FlutterActivity {
   // Results to be passed around from onActivityResult
   private int mResultCode;
   private Intent mResultData;
+
+  private Semaphore semaphore = new Semaphore(1);
 
   @Override
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -71,12 +75,6 @@ public class MainActivity extends FlutterActivity {
     super.onCreate(savedInstanceState);
 
     Activity activity = getActivity();
-
-    // Bypass android.os.NetworkOnMainThreadException
-    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-      .permitAll()
-      .build();
-    StrictMode.setThreadPolicy(policy);
 
     metrics = new DisplayMetrics();
     activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -161,19 +159,36 @@ public class MainActivity extends FlutterActivity {
       width,
       height,
       PixelFormat.RGBA_8888,
+      // Consider making this 1, then no semaphore needed (?)
       2
     );
 
     imageReader.setOnImageAvailableListener(
-      new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader reader) {
+      (ImageReader reader) -> {
+        new Thread(() -> {
+          final String TIME = Instant.now().toString();
+
+          Log.i(TAG + TIME, "Image available");
+
+          semaphore.acquireUninterruptibly();
+
           Image image = reader.acquireLatestImage();
-          if (image != null) {
-            processCapturedImage(image);
-            image.close(); // Release resources
+          if (image == null) {
+            Log.i(TAG + TIME, "Image is null");
+            semaphore.release();
+            return;
           }
-        }
+          try {
+            processCapturedImage(image);
+          } catch (Exception e) {
+            e.printStackTrace();
+          } finally {
+            Log.i(TAG + TIME, "Releasing semaphore");
+            image.close(); // Release resources
+            semaphore.release();
+          }
+        })
+          .start();
       },
       null
     );
@@ -197,19 +212,6 @@ public class MainActivity extends FlutterActivity {
 
     Log.i(TAG, String.format("Length of encoded: %d", encoded.length()));
 
-    // try {
-    //   Socket socket = new Socket("192.168.1.1", 12345);
-    //   // Request data
-    //   DataOutputStream outputStream = new DataOutputStream(
-    //     socket.getOutputStream()
-    //   );
-
-    //   outputStream.writeUTF(encoded);
-    // } catch (IOException e) {
-    //   String stackTrace = Log.getStackTraceString(e);
-    //   Log.e(TAG, stackTrace);
-    // }
-
     HttpURLConnection urlConnection;
     try {
       URL url = new URL("http://192.168.1.1:12345");
@@ -227,14 +229,7 @@ public class MainActivity extends FlutterActivity {
         urlConnection.getOutputStream()
       );
 
-      byte[] bytes = encoded.getBytes();
-
-      byte[] slice = Arrays.copyOfRange(bytes, 0, 10);
-      Log.i(TAG, "First 10: " + new String(slice, "UTF-8"));
-
-      slice = Arrays.copyOfRange(bytes, bytes.length - 10, bytes.length);
-      Log.i(TAG, "Last 10: " + new String(slice, "UTF-8"));
-
+      Log.i(TAG, "Begin sending image of size " + encoded.getBytes());
       out.write(encoded.getBytes());
       out.flush();
     } catch (Exception e) {
@@ -242,6 +237,7 @@ public class MainActivity extends FlutterActivity {
       return;
     } finally {
       urlConnection.disconnect();
+      Log.i(TAG, "Image sent!");
     }
   }
 }
