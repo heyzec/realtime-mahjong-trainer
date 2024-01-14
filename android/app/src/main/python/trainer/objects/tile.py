@@ -1,4 +1,4 @@
-from utils.convert import tiles34_index_to_mpsz
+from ..utils.convert import tiles34_index_to_mpsz
 
 
 class classproperty:

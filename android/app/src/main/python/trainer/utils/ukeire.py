@@ -1,6 +1,6 @@
-from utils.shanten import calculate_shanten
-from objects.tile_collection import TileCollection
-from objects.tile import Tile
+from .shanten import calculate_shanten
+from ..objects.tile_collection import TileCollection
+from ..objects.tile import Tile
 
 
 def calculate_ukeire(hand: TileCollection) -> int:

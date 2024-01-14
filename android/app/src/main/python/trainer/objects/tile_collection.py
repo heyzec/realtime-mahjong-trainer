@@ -1,10 +1,11 @@
 import random
-from objects.tile import Tile
+from typing import List
 
-from utils.convert import expand_mpsz, mpsz_to_tile34_index, tiles34_index_to_mpsz
+from ..objects.tile import Tile
+from ..utils.convert import expand_mpsz, mpsz_to_tile34_index, tiles34_index_to_mpsz
 
 class TileCollection:
-    def __init__(self, arr: list[int]):
+    def __init__(self, arr: List[int]):
         assert len(arr) == 34
         self.tiles34 = arr
 
@@ -76,9 +77,9 @@ class TileCollection:
         hand = self.get_empty()
 
         for _ in range(n):
-            index = random.choices(range(38), weights=self.tiles34)[0]
+            index = random.choices(range(34), weights=self.tiles34)[0]
 
-            hand.tiles[index] += 1
+            hand.tiles34[index] += 1
             self.tiles34[index] -= 1
 
         return hand

@@ -1,37 +1,36 @@
 # script.py
 # Taken from https://github.com/jaydangar/chaquopy_flutter#configuration-steps-
-import io,os,sys,time,threading,ctypes,inspect,traceback
+import sys
+import threading
+import traceback
 
-def _async_raise(tid, exctype):
-    tid = ctypes.c_long(tid)
-    if not inspect.isclass(exctype):
-        exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-        raise SystemError("Timeout Exception")
+from trainer.main import main
 
-def stop_thread(thread):
-    _async_raise(thread.ident, SystemExit)
+def wrap(function, *args):
+    """Wrap a function call to catch exceptions."""
+    def func(*storelist):
+        store = storelist[0]
+        output = "Oh no"
+        try:
+            output = function(*args)
+        except BaseException:
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
+        finally:
+            store[0] = output
+            return
 
-def text_thread_run(code):
-    try:
-        env={}
-        exec(code, env, env)
-    except Exception as e:
-        print(e)
+    return func
 
-#   This is the code to run Text functions...
+
 def mainTextCode(code):
-    global thread1
-    thread1 = threading.Thread(target=text_thread_run, args=(code,),daemon=True)
-    thread1.start()
-    timeout = 15 # change timeout settings in seconds here...
-    thread1_start_time = time.time()
-    while thread1.is_alive():
-        if time.time() - thread1_start_time > timeout:
-            stop_thread(thread1)
-            raise TimeoutError
-        time.sleep(1)
+    # We need to run python in a separate thread or the main thread will hang
+    # store = [None]
+    # callback = wrap(main)
+    # t = threading.Thread(target=callback, args=[store], daemon=True)
+    # t.start()
+    # return store[0]
+
+    # Run blockingly for now
+    return wrap(main)()
+

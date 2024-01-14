@@ -1,7 +1,7 @@
-from objects.tile import Tile
-from objects.tile_collection import TileCollection
-from utils.shanten import calculate_shanten
-from utils.ukeire import calculate_ukeire
+from .objects.tile import Tile
+from .objects.tile_collection import TileCollection
+from .utils.shanten import calculate_shanten
+from .utils.ukeire import calculate_ukeire
 
 class Trainer:
     def __init__(self, hand: TileCollection):
@@ -25,12 +25,14 @@ class Trainer:
         valid_discards = self.calculate_discards()
         best_ukeire = max(valid_discards.values())
         if tile not in valid_discards:
-            print("Increases your shanten - you are now further from ready.")
-            return
+            message = ("Increases your shanten - you are now further from ready.")
+            return message
         if valid_discards[tile] != best_ukeire:
-            print("Could be better")
-            return
-        print("That was the best choice!")
+            message = ("Could be better")
+            return message
+        message = ("That was the best choice!")
+        return message
+
 
 
 

@@ -1,3 +1,5 @@
+from typing import List
+
 def mpsz_to_tile34_index(tile: str) -> int:
     assert (
         len(tile) == 2
@@ -30,7 +32,7 @@ def tiles34_index_to_mpsz(index: int) -> str:
 
 
 
-def expand_mpsz(s: str) -> list[str]:
+def expand_mpsz(s: str) -> List[str]:
     output = []
     temp = []
 
