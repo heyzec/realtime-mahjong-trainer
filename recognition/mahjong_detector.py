@@ -15,6 +15,16 @@ class MahjongDetector(abc.ABC):
 
 LABELLED_DIR = "./images/labelled"
 
+
+class MahjongDectectionResult:
+    def __init__(self, image):
+        self.images = image
+        self.labels = []
+
+    def add(self, rect, label_name):
+        self.labels.append((rect, label_name))
+
+
 class SiftMahjongDetector(MahjongDetector):
     def __init__(self):
         self.sift = cv2.xfeatures2d.SIFT_create()
@@ -35,21 +45,41 @@ class SiftMahjongDetector(MahjongDetector):
     def process(self, image):
         rects = extract_tiles_bounds(image)
 
-        bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+        result = MahjongDectectionResult(image)
+
         for rect in rects:
             x,y,w,h = rect
             tile_img = image[y:y+h, x:x+w]
             k, d = self.sift.detectAndCompute(tile_img, None)
 
-            all_draw = []
+            FLANN_INDEX_KDTREE = 1
+            index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+            search_params = dict(checks = 50)
+            flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+            # all_draw = []
             best_score = 0
             best_label = None
             for label in self.features.keys():
-                matches = bf.match(d, self.features[label][1])
-                score = sum((m.distance for m in matches))
-                actual = cv2.imread('./images/labelled/' + label + '.png')
-                draw = cv2.drawMatches(tile_img, k, actual, self.features[label][0], matches, actual, flags=2)
-                all_draw.append(draw)
+
+                matches = flann.knnMatch(d,self.features[label][1],k=2)
+
+                # store all the good matches as per Lowe's ratio test.
+                good = []
+                for m,n in matches:
+                    if m.distance < 0.7*n.distance:
+                        good.append(m)
+
+
+
+
+
+                print(label, len(matches), len(good))
+                # score = sum((m.distance for m in matches))
+                # actual = cv2.imread('./images/labelled/' + label + '.png')
+                # draw = cv2.drawMatches(tile_img, k, actual, self.features[label][0], matches, actual, flags=2)
+                # all_draw.append(draw)
+                score = len(good)
 
 
 
@@ -60,11 +90,15 @@ class SiftMahjongDetector(MahjongDetector):
                     best_label = label
 
 
-            print(best_label)
-            show(join_vertical([convert_cv_to_pil(im) for im in all_draw]))
+            # print(best_label)
+            # show(join_vertical([convert_cv_to_pil(im) for im in all_draw]))
 
 
             # actual = cv2.imread('./tiles/labelled/' + best_label + '.png')
             # show(actual)
             # matches = cv2.drawMatches(actual, self.features[best_label][0], tile_img, k, matches, tile_img, flags=2)
             # show(matches)
+            # print(best_label)
+            result.add(rect, best_label)
+            # show(tile_img)
+        return result

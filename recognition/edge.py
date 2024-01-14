@@ -2,9 +2,6 @@ import numpy as np
 import cv2
 import random
 
-from utils import convert_cv_to_pil, show
-
-
 def extract_tiles_bounds(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -33,15 +30,4 @@ def extract_tiles_bounds(image):
 
     # show(drawed)
     return output
-
-
-# image = cv2.imread("./tiles/screenshots/Screenshot_20240114_155826_Let's Mahjong.jpg")
-# tiles = extract_tiles_bounds(image)
-# image = convert_cv_to_pil(image)
-#
-# for rect in tiles:
-#     x,y,w,h = rect
-#     im = image.crop((x, y, x+w, y+h))
-#     show(im)
-#
 
