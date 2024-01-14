@@ -47,5 +47,5 @@ __pycache__
 archived
 .direnv
 
-recognition/images/screenshots
-recognition/images/cropped
+android/app/src/main/python/recognition/images/screenshots
+android/app/src/main/python/recognition/images/cropped
