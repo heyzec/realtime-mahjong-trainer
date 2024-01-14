@@ -1,34 +1,42 @@
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
-        jcenter()
-        maven { url 'https://jitpack.io' }
-
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" } // eclipse
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:8.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "gradle.plugin.io.reconquest.gradle-android-eclipse:gradle-android-eclipse:1.1"
     }
 }
 
 allprojects {
     repositories {
         google()
-        jcenter()
-        maven { url 'https://jitpack.io' }
-
+        mavenCentral()
     }
 }
 
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+   afterEvaluate { project ->
+       if (project.hasProperty('android')) {
+           project.android {
+               if (namespace == null) {
+                   namespace project.group
+               }
+           }
+       }
+   }
 }
 subprojects {
     project.evaluationDependsOn(':app')
 }
+
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
@@ -37,20 +45,8 @@ tasks.register("clean", Delete) {
 apply plugin: 'io.reconquest.gradle-android-eclipse'
 apply plugin: 'eclipse'
 
-buildscript {
-    repositories {
-        maven {
-          url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-      classpath "gradle.plugin.io.reconquest.gradle-android-eclipse:gradle-android-eclipse:1.1"
-    }
-}
-
 eclipse {
-  classpath {
-    // plusConfigurations += [ configurations.compile, configurations.testCompile ]
-    downloadSources = true
-  }
+    classpath {
+        downloadSources = true
+    }
 }

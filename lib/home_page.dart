@@ -1,11 +1,11 @@
 import 'dart:developer';
+
 import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -21,13 +21,15 @@ class _HomePageState extends State<HomePage> {
   SendPort? homePort;
   String? latestMessageFromOverlay;
 
-  static const platform = MethodChannel('com.example.realtime_mahjong_trainer/stream');
+  static const platform =
+      MethodChannel('com.example.realtime_mahjong_trainer/stream');
 
-  String _batteryLevel = 'Unknown battery level.';
+  String _python = 'Python result not ready';
 
   @override
   void initState() {
     super.initState();
+
     if (homePort != null) return;
     final res = IsolateNameServer.registerPortWithName(
       _receivePort.sendPort,
@@ -78,103 +80,31 @@ class _HomePageState extends State<HomePage> {
 
   void loopRecord() async {
     while (true) {
-      await FlutterScreenRecording.startRecordScreen("video");
+      // await FlutterScreenRecording.startRecordScreen("video");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Mahjong"),
-        ),
-        body: Center(
-            child: Column(children: [
-          TextButton(
-            onPressed: start,
-            child: const Text("Show Overlay"),
-          ),
-          TextButton(
-            onPressed: recordForAWhile,
-            child: Text("Start Streaming"),
-          ),
-        ])));
-
-    return Scaffold(
       appBar: AppBar(
-        title: const Text('Plugin example app'),
+        title: const Text("Mahjong"),
       ),
       body: Center(
         child: Column(
           children: [
             TextButton(
-              onPressed: () async {
-                final status = await FlutterOverlayWindow.isPermissionGranted();
-                log("Is Permission Granted: $status");
-              },
-              child: const Text("Check Permission"),
-            ),
-            const SizedBox(height: 10.0),
-            TextButton(
-              onPressed: () async {
-                final bool? res =
-                    await FlutterOverlayWindow.requestPermission();
-                log("status: $res");
-              },
-              child: const Text("Request Permission"),
-            ),
-            const SizedBox(height: 10.0),
-            TextButton(
-              onPressed: () async {
-                if (await FlutterOverlayWindow.isActive()) return;
-                await FlutterOverlayWindow.showOverlay(
-                  enableDrag: true,
-                  overlayTitle: "X-SLAYER",
-                  overlayContent: 'Overlay Enabled',
-                  flag: OverlayFlag.defaultFlag,
-                  visibility: NotificationVisibility.visibilityPublic,
-                  positionGravity: PositionGravity.auto,
-                  height: 500,
-                  width: WindowSize.matchParent,
-                );
-              },
+              onPressed: start,
               child: const Text("Show Overlay"),
             ),
-            const SizedBox(height: 10.0),
             TextButton(
-              onPressed: () async {
-                final status = await FlutterOverlayWindow.isActive();
-                log("Is Active?: $status");
-              },
-              child: const Text("Is Active?"),
+              onPressed: recordForAWhile,
+              child: Text("Start Streaming"),
             ),
-            const SizedBox(height: 10.0),
             TextButton(
-              onPressed: () async {
-                await FlutterOverlayWindow.shareData('update');
-              },
-              child: const Text("Update Overlay"),
+              onPressed: () async {},
+              child: Text(_python),
             ),
-            const SizedBox(height: 10.0),
-            TextButton(
-              onPressed: () {
-                log('Try to close');
-                FlutterOverlayWindow.closeOverlay()
-                    .then((value) => log('STOPPED: alue: $value'));
-              },
-              child: const Text("Close Overlay"),
-            ),
-            const SizedBox(height: 20.0),
-            TextButton(
-              onPressed: () {
-                homePort ??=
-                    IsolateNameServer.lookupPortByName(_kPortNameOverlay);
-                homePort?.send('Send to overlay: ${DateTime.now()}');
-              },
-              child: const Text("Send message to overlay"),
-            ),
-            const SizedBox(height: 20),
-            Text(latestMessageFromOverlay ?? ''),
           ],
         ),
       ),

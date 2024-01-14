@@ -33,6 +33,7 @@ outputs = { self, nixpkgs, flake-utils }:
 
             (let
               python-packages = ps: with ps; [
+                pillow
                 (buildPythonPackage rec {
                 pname = "mahjong";
                   version = "1.2.1";
