@@ -16,6 +16,12 @@ dependencies:
   permission_handler: ^11.0.1
   share_plus: ^7.2.1
   flutter_overlay_window: ^0.4.3
+  # chaquopy: ^0.0.19
+  chaquopy:
+    git:
+      url: https://github.com/heyzec/chaquopy_flutter.git
+      ref: build-files-patched
+
   # chaquopy: 0.0.19
 
 dev_dependencies:

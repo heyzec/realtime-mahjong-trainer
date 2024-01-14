@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:chaquopy/chaquopy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -102,7 +103,10 @@ class _HomePageState extends State<HomePage> {
               child: Text("Start Streaming"),
             ),
             TextButton(
-              onPressed: () async {},
+              onPressed: () async {
+                var result = await Chaquopy.executeCode("print('hello world')");
+                print(result);
+              },
               child: Text(_python),
             ),
           ],
