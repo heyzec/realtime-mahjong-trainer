@@ -47,3 +47,5 @@ __pycache__
 archived
 .direnv
 
+recognition/images/screenshots
+recognition/images/cropped
