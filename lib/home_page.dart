@@ -1,11 +1,7 @@
-import 'dart:developer';
-
-import 'dart:isolate';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:realtime_mahjong_trainer/channel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -15,14 +11,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const String _kPortNameOverlay = 'OVERLAY';
-  static const String _kPortNameHome = 'UI';
-  final _receivePort = ReceivePort();
-  SendPort? homePort;
   String? latestMessageFromOverlay;
 
-  static const platform =
-      MethodChannel('com.example.realtime_mahjong_trainer/stream');
+  static const channel = MethodChannel(CHANNEL_NAME);
 
   String _python = 'Python result not ready';
 
@@ -30,39 +21,35 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    if (homePort != null) return;
-    final res = IsolateNameServer.registerPortWithName(
-      _receivePort.sendPort,
-      _kPortNameHome,
-    );
-    log("$res: OVERLAY");
-    _receivePort.listen((message) {
-      log("message from OVERLAY: $message");
-      setState(() {
-        latestMessageFromOverlay = 'Latest Message From Overlay: $message';
-      });
+    channel.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'deliverAnalysis') {
+        // Note: It is only possible to shareData from main to overlay with thi
+        await FlutterOverlayWindow.shareData(call.arguments);
+        return 0;
+      }
+      return null;
     });
   }
 
   Future<void> recordForAWhile() async {
     try {
-      print("Going to start");
-      await platform.invokeMethod<int>('startStream');
-      print("start");
-      // await Future.delayed(Duration(seconds: 10), () async {
-      //   print("going to stop");
-      //   await platform.invokeMethod<int>('stopRecording');
-      //   print("stop");
-      // });
-    } on PlatformException catch (e) {
-      print(e);
+      await channel.invokeMethod<int>('startStream');
     } on Exception catch (e) {
       print(e);
     }
   }
 
   void start() async {
-    if (await FlutterOverlayWindow.isActive()) return;
+    if (await FlutterOverlayWindow.isActive()) {
+      print("Overlay already open.");
+      return;
+    }
+    if (await FlutterOverlayWindow.isPermissionGranted() != true) {
+      if (await FlutterOverlayWindow.requestPermission() != true) {
+        print("Permission not granted");
+        return;
+      }
+    }
 
     await FlutterOverlayWindow.showOverlay(
       enableDrag: true,
@@ -74,14 +61,6 @@ class _HomePageState extends State<HomePage> {
       height: 500,
       width: WindowSize.matchParent,
     );
-
-    // loopRecord();
-  }
-
-  void loopRecord() async {
-    while (true) {
-      // await FlutterScreenRecording.startRecordScreen("video");
-    }
   }
 
   @override
@@ -103,7 +82,7 @@ class _HomePageState extends State<HomePage> {
             ),
             TextButton(
               onPressed: () async {
-                await platform.invokeMethod('startPython');
+                await channel.invokeMethod('startPython');
                 // var result = await Chaquopy.executeCode("print('hello world')");
                 // print(result);
               },

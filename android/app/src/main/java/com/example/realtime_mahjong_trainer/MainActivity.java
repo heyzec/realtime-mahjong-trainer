@@ -7,6 +7,8 @@ import android.graphics.PixelFormat;
 import android.media.Image;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import androidx.annotation.NonNull;
 import com.chaquo.python.PyException;
@@ -16,6 +18,7 @@ import com.chaquo.python.android.AndroidPlatform;
 import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
@@ -24,10 +27,12 @@ public class MainActivity extends FlutterActivity {
   private static final String TAG = "MainActivity";
 
   // For calls from Flutter
-  private static final String CHANNEL =
-    "com.example.realtime_mahjong_trainer/stream";
+  private static final String CHANNEL_NAME =
+    "com.example.realtime_mahjong_trainer/channel";
 
   private static final int REQUEST_MEDIA_PROJECTION = 1;
+
+  private MethodChannel channel;
 
   MediaProjectionManager mMediaProjectionManager;
   private ScreenStreamer streamer;
@@ -59,23 +64,24 @@ public class MainActivity extends FlutterActivity {
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     super.configureFlutterEngine(flutterEngine);
 
-    new MethodChannel(
-      flutterEngine.getDartExecutor().getBinaryMessenger(),
-      CHANNEL
-    )
-      .setMethodCallHandler((call, result) -> {
-        // This method is invoked on the main thread.
-        if (call.method.equals("startStream")) {
-          result.success(startStream());
-          return;
-        }
-        if (call.method.equals("startPython")) {
-          result.success(startPython());
-          return;
-        }
+    channel =
+      new MethodChannel(
+        flutterEngine.getDartExecutor().getBinaryMessenger(),
+        CHANNEL_NAME
+      );
+    channel.setMethodCallHandler((call, result) -> {
+      // This method is invoked on the main thread.
+      if (call.method.equals("startStream")) {
+        result.success(startStream());
+        return;
+      }
+      if (call.method.equals("startPython")) {
+        result.success(startPython());
+        return;
+      }
 
-        result.notImplemented();
-      });
+      result.notImplemented();
+    });
   }
 
   @Override
@@ -121,8 +127,18 @@ public class MainActivity extends FlutterActivity {
 
     Python python = Python.getInstance();
     PyObject image_data = python.getModule("numpy").callAttr("array", encoded);
-    PyObject json = engine.callAttr("process", image_data);
+    String json = engine.callAttr("process", image_data).toString();
+
     Log.i(TAG, json.toString());
+    new Handler(Looper.getMainLooper())
+      .post(
+        new Runnable() {
+          @Override
+          public void run() {
+            channel.invokeMethod("deliverAnalysis", json);
+          }
+        }
+      );
 
     return;
   }

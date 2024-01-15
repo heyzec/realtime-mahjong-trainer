@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class MahjongOverlay extends StatefulWidget {
   @override
@@ -10,14 +8,18 @@ class MahjongOverlay extends StatefulWidget {
 
 class _MahjongOverlayState extends State<MahjongOverlay> {
   List<String> logs = [];
-  static const platform = MethodChannel('samples.flutter.dev/battery');
 
-  String _batteryLevel = 'Unknown battery level.';
+  dynamic toDisplay;
 
-  Future<void> _getBatteryLevel() async {
-    try {
-      final result = await platform.invokeMethod<int>('startRecording');
-    } on PlatformException catch (e) {}
+  @override
+  void initState() {
+    super.initState();
+
+    FlutterOverlayWindow.overlayListener.listen((event) {
+      setState(() {
+        toDisplay = event;
+      });
+    });
   }
 
   @override
@@ -32,10 +34,12 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
           child: Stack(
             children: [
               ElevatedButton(
-                onPressed: _getBatteryLevel,
-                child: const Text('Get Battery Level'),
+                onPressed: () {
+                  FlutterOverlayWindow.shareData("Hello from the other side");
+                },
+                child: const Text('Start python'),
               ),
-              Text(_batteryLevel),
+              Text(toDisplay ?? "Nothing to display"),
               Positioned(
                 top: 0,
                 right: 0,

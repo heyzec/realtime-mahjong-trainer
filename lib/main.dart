@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:realtime_mahjong_trainer/home_page.dart';
 import 'package:realtime_mahjong_trainer/overlays/mahjong_overlay.dart';
-import 'package:realtime_mahjong_trainer/overlays/true_caller_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
