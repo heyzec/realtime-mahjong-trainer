@@ -46,7 +46,6 @@ class SiftMahjongDetector(MahjongDetector):
         self._predetect_features()
         if len(self.features) == 0:
             raise Exception("No features processed")
-        print(self.features)
 
 
     def _predetect_features(self):

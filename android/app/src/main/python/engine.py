@@ -35,4 +35,9 @@ class Engine:
         s = json.dumps({"shanten": shanten})
         print(s)
 
-        return s
+        # return image.tobytes()
+        # To demostrate it is possible to send large amounts of data
+        image_bytes = cv2.imencode('.jpg', image)[1].tobytes()
+        print("Image bytes length", len(image_bytes))
+        return image_bytes
+

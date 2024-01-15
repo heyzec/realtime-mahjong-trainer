@@ -20,6 +20,10 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class MainActivity extends FlutterActivity {
 
@@ -127,20 +131,32 @@ public class MainActivity extends FlutterActivity {
 
     Python python = Python.getInstance();
     PyObject image_data = python.getModule("numpy").callAttr("array", encoded);
-    String json = engine.callAttr("process", image_data).toString();
+    PyObject result = engine.callAttr("process", image_data);
 
-    Log.i(TAG, json.toString());
-    new Handler(Looper.getMainLooper())
-      .post(
-        new Runnable() {
-          @Override
-          public void run() {
-            channel.invokeMethod("deliverAnalysis", json);
-          }
-        }
-      );
+    byte[] bytes = result.toJava(byte[].class);
+    int bytesLength = bytes.length;
+
+    Socket socket = new Socket();
+    Log.i(TAG, "Sending n bytes:" + bytesLength);
+    try {
+      socket.connect(new InetSocketAddress("127.0.0.1", 55555), 1000);
+      DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+      Log.i(TAG, "Sending length");
+      dataOut.writeBytes(leftPadZeros(String.valueOf(bytesLength), 8));
+      Log.i(TAG, "Sending actual data");
+      dataOut.write(bytes);
+      Log.i(TAG, "closing everything");
+      dataOut.close();
+      socket.close();
+    } catch (IOException e) {
+      Log.e(TAG, "Error sending data" + e.toString());
+    }
 
     return;
+  }
+
+  static String leftPadZeros(String s, int length) {
+    return String.format("%1$" + length + "s", s).replace(' ', '0');
   }
 
   int startPython() {

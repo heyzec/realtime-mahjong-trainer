@@ -27,6 +27,10 @@ public class ScreenStreamer {
 
   private Semaphore semaphore;
 
+  private static int MAX_RATE = 5000;
+
+  private Instant previous;
+
   public ScreenStreamer(
     DisplayMetrics metrics,
     MediaProjectionManager mMediaProjectionManager,
@@ -80,11 +84,22 @@ public class ScreenStreamer {
             return;
           }
           try {
+            if (previous != null) {
+              long delta =
+                Instant.now().toEpochMilli() - previous.toEpochMilli();
+              Log.i(TAG + TIME, "" + delta);
+              if (delta < MAX_RATE) {
+                Log.i(TAG + TIME, "Sleep for" + delta);
+                Thread.sleep(delta);
+              }
+            }
             this.callback.accept(image);
+            previous = Instant.now();
           } catch (Exception e) {
+            Log.i(TAG + TIME, "Exception occured" + e.toString());
             e.printStackTrace();
           } finally {
-            Log.i(TAG + TIME, "Releasing semaphore");
+            // Log.i(TAG + TIME, "Releasing semaphore");
             image.close(); // Release resources
             semaphore.release();
           }
