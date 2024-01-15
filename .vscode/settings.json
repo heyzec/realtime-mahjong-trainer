@@ -32,6 +32,8 @@
         // For androidx.fragment.app.FragmentTransaction, had to use older version or will crash LSP
         // "/home/heyzec/.gradle/caches/modules-2/files-2.1/androidx.fragment/fragment/1.1.0/5f9efc7569e651415a0958d6b3e6226ef2825c24/annotations.zip",
         "/home/heyzec/fragment/fragment-1.0.0.jar",
+
+        "/home/heyzec/.gradle/caches/modules-2/files-2.1/com.chaquo.python.runtime/chaquopy_java/15.0.1/f6b564301b4e5aaf8bfaa1b2076dc1d6786b0f6/chaquopy_java-15.0.1.jar",
     ],
     "android-dev-ext.codeCompletionLibraries": [
         "androidx.activity:activity",

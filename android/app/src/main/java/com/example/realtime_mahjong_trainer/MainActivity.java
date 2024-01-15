@@ -14,6 +14,10 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import androidx.annotation.NonNull;
+import com.chaquo.python.PyException;
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -51,6 +55,8 @@ public class MainActivity extends FlutterActivity {
 
   private Semaphore semaphore = new Semaphore(1);
 
+  private PyObject engine;
+
   @Override
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     super.configureFlutterEngine(flutterEngine);
@@ -63,6 +69,10 @@ public class MainActivity extends FlutterActivity {
         // This method is invoked on the main thread.
         if (call.method.equals("startStream")) {
           result.success(startStream());
+          return;
+        }
+        if (call.method.equals("startPython")) {
+          result.success(startPython());
           return;
         }
 
@@ -207,37 +217,30 @@ public class MainActivity extends FlutterActivity {
 
   void processCapturedImage(Image image) {
     Log.i(TAG, "We got a new image!");
-    ImageEncoder encoder = new ImageEncoder();
-    String encoded = encoder.encodeImageToBase64(image);
+    byte[] encoded = ImageEncoder.encodeImageToByteArray(image);
+    Log.i(TAG, String.format("Length of encoded: %d", encoded.length));
 
-    Log.i(TAG, String.format("Length of encoded: %d", encoded.length()));
+    Python python = Python.getInstance();
+    PyObject bytes = python.getModule("numpy").callAttr("array", encoded);
+    engine.callAttr("process", bytes);
 
-    HttpURLConnection urlConnection;
-    try {
-      URL url = new URL("http://192.168.1.1:12345");
-      urlConnection = (HttpURLConnection) url.openConnection();
-    } catch (Exception e) {
-      Log.e(TAG, Log.getStackTraceString(e));
-      return;
+    return;
+  }
+
+  int startPython() {
+    if (Python.isStarted()) {
+      return 1;
     }
-
+    Python.start(new AndroidPlatform(getContext()));
+    Python python = Python.getInstance();
     try {
-      urlConnection.setDoOutput(true);
-      urlConnection.setChunkedStreamingMode(0);
-
-      OutputStream out = new BufferedOutputStream(
-        urlConnection.getOutputStream()
-      );
-
-      Log.i(TAG, "Begin sending image of size " + encoded.getBytes());
-      out.write(encoded.getBytes());
-      out.flush();
-    } catch (Exception e) {
-      Log.e(TAG, Log.getStackTraceString(e));
-      return;
-    } finally {
-      urlConnection.disconnect();
-      Log.i(TAG, "Image sent!");
+      engine = python.getModule("engine").get("Engine").callThrows();
+    } catch (Throwable e) {
+      Log.i(TAG, e.toString());
+      return 2;
     }
+    Log.i(TAG, "started Python");
+
+    return 0;
   }
 }

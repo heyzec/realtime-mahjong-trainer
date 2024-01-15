@@ -16,11 +16,6 @@ public final class GeneratedPluginRegistrant {
   private static final String TAG = "GeneratedPluginRegistrant";
   public static void registerWith(@NonNull FlutterEngine flutterEngine) {
     try {
-      flutterEngine.getPlugins().add(new com.chaquopy.chaquopy.ChaquopyPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin chaquopy, com.chaquopy.chaquopy.ChaquopyPlugin", e);
-    }
-    try {
       flutterEngine.getPlugins().add(new flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin flutter_overlay_window, flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin", e);

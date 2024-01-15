@@ -17,15 +17,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  chaquopy:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: build-files-patched
-      resolved-ref: "5ec27f25a165c10c5c85a40671cd351cc1b73c69"
-      url: "https://github.com/heyzec/chaquopy_flutter.git"
-    source: git
-    version: "0.0.18"
   characters:
     dependency: transitive
     description:

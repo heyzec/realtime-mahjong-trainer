@@ -15,9 +15,13 @@ public class ImageEncoder {
   private static final String TAG = "ImageEncoder";
 
   public static String encodeImageToBase64(Image image) {
-    Bitmap bitmap = imageToBitmap(image);
-    byte[] bytes = bitmapToByteArray(bitmap);
+    byte[] bytes = encodeImageToByteArray(image);
     return Base64.encodeToString(bytes, Base64.DEFAULT);
+  }
+
+  public static byte[] encodeImageToByteArray(Image image) {
+    Bitmap bitmap = imageToBitmap(image);
+    return bitmapToByteArray(bitmap);
   }
 
   private static Bitmap imageToBitmap(Image image) {

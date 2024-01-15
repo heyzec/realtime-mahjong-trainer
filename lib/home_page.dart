@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:chaquopy/chaquopy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -104,8 +103,9 @@ class _HomePageState extends State<HomePage> {
             ),
             TextButton(
               onPressed: () async {
-                var result = await Chaquopy.executeCode("print('hello world')");
-                print(result);
+                await platform.invokeMethod('startPython');
+                // var result = await Chaquopy.executeCode("print('hello world')");
+                // print(result);
               },
               child: Text(_python),
             ),
