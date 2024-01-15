@@ -1,8 +1,9 @@
 import abc
 import os
 import cv2
-from utils import show, join_vertical, convert_cv_to_pil
-from edge import extract_tiles_bounds
+import numpy as np
+from .edge import extract_tiles_bounds
+from .utils import show
 
 class MahjongDetector(abc.ABC):
     def __init__(self) -> None:
@@ -13,22 +14,40 @@ class MahjongDetector(abc.ABC):
         pass
 
 
-LABELLED_DIR = "./images/labelled"
+LABELLED_DIR = os.path.join(os.path.dirname(__file__), "./images/labelled")
 
 
 class MahjongDectectionResult:
-    def __init__(self, image):
-        self.images = image
+    def __init__(self, image: np.ndarray):
+        self.image = image
         self.labels = []
 
     def add(self, rect, label_name):
         self.labels.append((rect, label_name))
 
+    def show(self):
+        canvas = self.image.copy()
+
+        for label in self.labels:
+            rect, name = label
+            x,y,w,h = rect
+            cv2.rectangle(canvas, (x, y), (x+w, y+h), (0, 0, 255), thickness=3)
+            pos = (x + 5, y + 27)
+            cv2.putText(canvas, name, pos, 0, fontScale=1, color=(0,0,255), thickness=2)
+
+        show(canvas)
+
+
 
 class SiftMahjongDetector(MahjongDetector):
     def __init__(self):
-        self.sift = cv2.xfeatures2d.SIFT_create()
+        self.sift = cv2.SIFT_create()
         self.features = {}
+        self._predetect_features()
+        if len(self.features) == 0:
+            raise Exception("No features processed")
+        print(self.features)
+
 
     def _predetect_features(self):
         for basename in os.listdir(LABELLED_DIR):
@@ -74,7 +93,7 @@ class SiftMahjongDetector(MahjongDetector):
 
 
 
-                print(label, len(matches), len(good))
+                # print(label, len(matches), len(good))
                 # score = sum((m.distance for m in matches))
                 # actual = cv2.imread('./images/labelled/' + label + '.png')
                 # draw = cv2.drawMatches(tile_img, k, actual, self.features[label][0], matches, actual, flags=2)
@@ -98,6 +117,7 @@ class SiftMahjongDetector(MahjongDetector):
             # show(actual)
             # matches = cv2.drawMatches(actual, self.features[best_label][0], tile_img, k, matches, tile_img, flags=2)
             # show(matches)
+            # print(best_label)
             # print(best_label)
             result.add(rect, best_label)
             # show(tile_img)

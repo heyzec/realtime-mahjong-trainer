@@ -32,7 +32,7 @@ class TileCollection:
         return TileCollection([0] * 34)
 
     @classmethod
-    def from_tenhou_string(cls, s: str):
+    def from_mpsz(cls, s: str):
         tiles = [0] * 34
         for tile in expand_mpsz(s):
             index = mpsz_to_tile34_index(tile)

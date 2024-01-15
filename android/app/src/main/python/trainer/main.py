@@ -4,7 +4,7 @@ from .trainer import Trainer
 from .utils.convert import tiles34_index_to_mpsz
 
 def main():
-    hand = TileCollection.from_tenhou_string("3568889m238p3678s")
+    hand = TileCollection.from_mpsz("3568889m238p3678s")
     trainer = Trainer(hand)
 
     # hack

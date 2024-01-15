@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from PIL import Image
 
@@ -29,7 +30,7 @@ def crop_all():
 
     return images
 
-def join_horizontal(images: list[Image.Image]):
+def join_horizontal(images: List[Image.Image]):
     MARGIN = 10
 
     width = sum((im.size[0] for im in images))

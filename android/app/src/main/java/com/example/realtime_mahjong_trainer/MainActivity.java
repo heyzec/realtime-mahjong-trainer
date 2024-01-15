@@ -120,8 +120,9 @@ public class MainActivity extends FlutterActivity {
     Log.i(TAG, String.format("Length of encoded: %d", encoded.length));
 
     Python python = Python.getInstance();
-    PyObject bytes = python.getModule("numpy").callAttr("array", encoded);
-    engine.callAttr("process", bytes);
+    PyObject image_data = python.getModule("numpy").callAttr("array", encoded);
+    PyObject json = engine.callAttr("process", image_data);
+    Log.i(TAG, json.toString());
 
     return;
   }
@@ -136,6 +137,7 @@ public class MainActivity extends FlutterActivity {
       engine = python.getModule("engine").get("Engine").callThrows();
     } catch (Throwable e) {
       Log.i(TAG, e.toString());
+      e.printStackTrace();
       return 2;
     }
     Log.i(TAG, "started Python");

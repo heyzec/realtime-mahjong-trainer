@@ -7,6 +7,9 @@ class Trainer:
     def __init__(self, hand: TileCollection):
         self.hand = hand
 
+    def get_shanten(self):
+        return calculate_shanten(self.hand)
+
     def calculate_discards(self):
         hand = self.hand
         output = {}

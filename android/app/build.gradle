@@ -80,6 +80,8 @@ chaquopy {
             install("mahjong")
             // The latest version available on https://chaquo.com/pypi-13.1/
             install("opencv-python~=4.5.1")
+
+            install("pillow")
         }
     }
 }

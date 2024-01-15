@@ -1,3 +1,4 @@
+from typing import List
 import os
 
 import cv2
@@ -13,7 +14,7 @@ def show(img):
     img.save("temp.png")
     os.system("qimgv temp.png")
 
-def join_horizontal(images: list[Image.Image]):
+def join_horizontal(images: List[Image.Image]):
     MARGIN = 10
 
     width = sum((im.size[0] for im in images))
@@ -27,7 +28,7 @@ def join_horizontal(images: list[Image.Image]):
 
     return dst
 
-def join_vertical(images: list[Image.Image]):
+def join_vertical(images: List[Image.Image]):
     MARGIN = 10
 
     width = max((im.size[0] for im in images))

@@ -3,8 +3,9 @@ description = "Flutter 3.13.x";
 inputs = {
   nixpkgs.url = "github:NixOS/nixpkgs/23.11";
   flake-utils.url = "github:numtide/flake-utils";
+  nixpkgs-python.url = "github:NixOS/nixpkgs/6f05cfdb1e78d36c0337516df674560e4b51c79b";
 };
-outputs = { self, nixpkgs, flake-utils }:
+outputs = { self, nixpkgs, flake-utils, nixpkgs-python }:
   flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = import nixpkgs {
@@ -13,6 +14,9 @@ outputs = { self, nixpkgs, flake-utils }:
           android_sdk.accept_license = true;
           allowUnfree = true;
         };
+      };
+      pkgs-python = import nixpkgs-python {
+        inherit system;
       };
       buildToolsVersion = "34.0.0";
       androidComposition = pkgs.androidenv.composeAndroidPackages {
@@ -33,9 +37,9 @@ outputs = { self, nixpkgs, flake-utils }:
 
             (let
               python-packages = ps: with ps; [
-                pillow
-                numpy
                 opencv4
+                numpy
+                pillow
                 (buildPythonPackage rec {
                 pname = "mahjong";
                   version = "1.2.1";
@@ -44,13 +48,10 @@ outputs = { self, nixpkgs, flake-utils }:
                     sha256 = "r77y9f6mVrc+rLY5YXbR6AzQYSPCTb6iffhxAOhQIJc=";
                   };
                   doCheck = false;
-                  propagatedBuildInputs = [
-                    # # Specify dependencies
-                    # pkgs.python3Packages.numpy
-                  ];
+                  propagatedBuildInputs = [];
                 })
               ];
-            in python3.withPackages python-packages)
+            in pkgs-python.python38.withPackages python-packages)
           ];
         };
     });
