@@ -3,6 +3,7 @@ package com.example.realtime_mahjong_trainer;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.media.Image;
 import android.media.projection.MediaProjectionManager;
@@ -89,6 +90,14 @@ public class MainActivity extends FlutterActivity {
   }
 
   @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    DisplayMetrics metrics = new DisplayMetrics();
+    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    streamer.restartStream(metrics);
+  }
+
+  @Override
   public void onActivityResult(int requestCode, int resultCode, Intent intent) {
     Log.i(
       TAG,
@@ -170,7 +179,7 @@ public class MainActivity extends FlutterActivity {
     } catch (Throwable e) {
       Log.i(TAG, e.toString());
       e.printStackTrace();
-      return 2;
+      throw new RuntimeException();
     }
     Log.i(TAG, "started Python");
 

@@ -22,6 +22,8 @@ public class ScreenStreamer {
   private DisplayMetrics metrics;
   private MediaProjectionManager mMediaProjectionManager;
   private MediaProjection mMediaProjection;
+  private ImageReader mImageReader;
+  private VirtualDisplay mVirtualDisplay;
 
   private Consumer<Image> callback;
 
@@ -46,8 +48,23 @@ public class ScreenStreamer {
     mMediaProjection =
       mMediaProjectionManager.getMediaProjection(mResultCode, mResultData);
     Assert.assertNotNull(mMediaProjection);
-    int width = metrics.widthPixels;
+    setupResources();
+  }
+
+  public void restartStream(DisplayMetrics metrics) {
+    teardownResources();
+    this.metrics = metrics;
+    setupResources();
+  }
+
+  private void teardownResources() {
+    mVirtualDisplay.release();
+    mImageReader.close();
+  }
+
+  private void setupResources() {
     int height = metrics.heightPixels;
+    int width = metrics.widthPixels;
     int density = metrics.densityDpi;
 
     Log.i(
@@ -60,20 +77,24 @@ public class ScreenStreamer {
       density +
       ")"
     );
-    ImageReader imageReader = ImageReader.newInstance(
-      width,
-      height,
-      PixelFormat.RGBA_8888,
-      // Consider making this 1, then no semaphore needed (?)
-      2
-    );
+    mImageReader =
+      ImageReader.newInstance(
+        width,
+        height,
+        PixelFormat.RGBA_8888,
+        // Consider making this 1, then no semaphore needed (?)
+        2
+      );
 
-    imageReader.setOnImageAvailableListener(
+    mImageReader.setOnImageAvailableListener(
       (ImageReader reader) -> {
         new Thread(() -> {
           final String TIME = Instant.now().toString();
 
-          Log.i(TAG + TIME, "Image available");
+          Log.i(
+            TAG + TIME,
+            String.format("Image available %dx%d", width, height)
+          );
 
           semaphore.acquireUninterruptibly();
 
@@ -109,15 +130,16 @@ public class ScreenStreamer {
       null
     );
 
-    mMediaProjection.createVirtualDisplay(
-      "ScreenCapture",
-      width,
-      height,
-      density,
-      DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-      imageReader.getSurface(),
-      null,
-      null
-    );
+    mVirtualDisplay =
+      mMediaProjection.createVirtualDisplay(
+        "ScreenCapture",
+        width,
+        height,
+        density,
+        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+        mImageReader.getSurface(),
+        null,
+        null
+      );
   }
 }
