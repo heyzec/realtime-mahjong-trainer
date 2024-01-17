@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime
 import os
 import cv2
 from PIL import Image
@@ -43,3 +44,12 @@ def join_vertical(images: List[Image.Image]):
         pos += images[i].size[1] + MARGIN
 
     return dst
+
+def save_image(image: CVImage, tag: str):
+    filepath = f"/storage/emulated/0/Android/data/com.example.realtime_mahjong_trainer/files/{datetime.now()}_{tag}.png"
+    try:
+        image_bytes: bytes = cv2.imencode('.png', image)[1].tobytes()
+        with open(filepath, 'wb') as f:
+            f.write(image_bytes)
+    except Exception as e:
+        print(e)

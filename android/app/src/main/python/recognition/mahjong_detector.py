@@ -4,7 +4,7 @@ from typing import Tuple, List, Dict, Any
 import cv2
 import numpy as np
 
-from .edge import extract_tiles_bounds
+from .edge import EdgeDetector
 from .utils import show
 from stubs import CVImage, Rect
 
@@ -79,7 +79,13 @@ class SiftMahjongDetector(MahjongDetector):
 
 
     def process(self, image: CVImage) -> MahjongDectectionResult:
-        debug, rects = extract_tiles_bounds(image)
+        edge_detector = EdgeDetector(image)
+
+        edge_result = edge_detector.detect()
+
+        rects: List[Rect] = edge_result.results
+
+
 
         result = MahjongDectectionResult(image)
 
@@ -129,6 +135,11 @@ class SiftMahjongDetector(MahjongDetector):
             assert best_label is not None
             result.add(rect, best_label)
 
-        result.image = debug
+        # result.image = debug
             # show(tile_img)
+
+        result.get_debug_image = lambda: edge_result.get_debug_image()
+
+
+
         return result

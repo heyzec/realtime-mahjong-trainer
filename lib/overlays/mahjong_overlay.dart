@@ -25,7 +25,12 @@ class MahjongOverlay extends StatefulWidget {
 class _MahjongOverlayState extends State<MahjongOverlay> {
   List<String> logs = [];
 
-  Image? image;
+  late Image image;
+
+  bool ready = false;
+
+  int imageWidth = 0;
+  int imageHeight = 0;
 
   @override
   void initState() {
@@ -43,7 +48,16 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
         print("Received data of ${data.length}");
         setState(() {
           image = Image.memory(Uint8List.fromList(data));
+          ready = true;
         });
+        image.image
+            .resolve(ImageConfiguration())
+            .addListener(ImageStreamListener((ImageInfo info, bool _) {
+          setState(() {
+            imageWidth = info.image.width;
+            imageHeight = info.image.height;
+          });
+        }));
       },
       host: "0.0.0.0",
       port: 12345,
@@ -53,39 +67,48 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
   @override
   Widget build(BuildContext context) {
     print("Build overlay");
-    return Material(
-      color: Colors.transparent,
-      child: Center(
-        child: Container(
-          color: Colors.blue,
-          height: 200,
-          width: 200,
-          child: Stack(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  FlutterOverlayWindow.shareData("Hello from the other side");
-                },
-                child: const Text('Start python'),
-              ),
-              image ?? Text("Nothing"),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: IconButton(
-                  onPressed: () async {
-                    await FlutterOverlayWindow.closeOverlay();
-                  },
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ],
+
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.red, //                   <--- border color
+            width: 1,
           ),
         ),
-      ),
-    );
+        child: FittedBox(
+          fit: BoxFit.fill,
+          // child:
+
+          //     // width: constraints.maxWidth,
+          //     // height: constraints.maxHeight,
+          //     !ready ? Text("No image") : image
+          // child: Stack(
+          //   fit: StackFit.expand,
+          //   children: [
+          //     !ready
+          //         ? Text("No image")
+          //         : SizedBox(
+          //             width: constraints.maxWidth,
+          //             height: constraints.maxHeight,
+          //             child: image,
+          //           ),
+          //     Center(
+          //       child: Column(
+          //         mainAxisSize: MainAxisSize.min,
+          //         children: [
+          //           Text(ready.toString()),
+          //           Text("Image: $imageHeight x $imageWidth"),
+          //           Text(
+          //               "Box: ${constraints.maxHeight} x ${constraints.maxWidth}"),
+          //         ],
+          //       ),
+          //     ),
+          //   ],
+          // ),
+        ),
+      );
+    });
   }
 }

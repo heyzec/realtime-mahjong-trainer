@@ -55,16 +55,20 @@ class _HomePageState extends State<HomePage> {
       enableDrag: true,
       overlayTitle: "X-SLAYER",
       overlayContent: 'Overlay Enabled',
-      flag: OverlayFlag.defaultFlag,
+      flag: OverlayFlag.clickThrough,
       visibility: NotificationVisibility.visibilityPublic,
       positionGravity: PositionGravity.auto,
-      height: 500,
       width: WindowSize.matchParent,
+      height: WindowSize.matchParent,
+      alignment: OverlayAlignment.bottomCenter,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Mahjong"),
