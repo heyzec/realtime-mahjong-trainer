@@ -139,10 +139,10 @@ public class MainActivity extends FlutterActivity {
     Log.i(TAG, String.format("Length of encoded: %d", encoded.length));
 
     Python python = Python.getInstance();
-    PyObject image_data = python.getModule("numpy").callAttr("array", encoded);
-    PyObject result = engine.callAttr("process", image_data);
+    PyObject imageData = python.getModule("numpy").callAttr("array", encoded);
+    PyObject engineResult = engine.callAttr("process", imageData);
 
-    byte[] bytes = result.toJava(byte[].class);
+    byte[] bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
     int bytesLength = bytes.length;
 
     Socket socket = new Socket();

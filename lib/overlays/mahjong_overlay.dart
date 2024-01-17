@@ -1,20 +1,51 @@
-import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:realtime_mahjong_trainer/overlays/tiles_painter.dart';
 import 'package:realtime_mahjong_trainer/server.dart';
 
-void startServer() {
-  Future<ServerSocket> serverFuture = ServerSocket.bind('0.0.0.0', 12345);
-  serverFuture.then((ServerSocket server) {
-    server.listen((Socket client) {
-      client.listen((List<int> data) {
-        String result = new String.fromCharCodes(data);
-        print(result.substring(0, result.length - 1));
-      });
-    });
-  });
+parseEngineResult(List<int> b) {
+  int sepIndex = b.indexOf(10); // refers to \n
+
+  String jsonString = String.fromCharCodes(b.sublist(0, sepIndex));
+  var json = jsonDecode(jsonString);
+
+  Image image = Image.memory(Uint8List.fromList(b.sublist(sepIndex + 1)));
+
+  return (json, image);
+}
+
+class AnalysisOverlay extends StatelessWidget {
+  final dynamic analysis;
+  const AnalysisOverlay(this.analysis);
+
+  @override
+  Widget build(BuildContext context) {
+    int shanten = analysis['shanten'];
+    String hand = analysis['hand'];
+    List<dynamic> tiles = analysis['tiles'];
+
+    double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    return Stack(
+      children: [
+        LayoutBuilder(
+          builder: (_, constraints) => CustomPaint(
+            painter: TilesPainter(tiles, devicePixelRatio),
+            size: Size(constraints.maxWidth, constraints.maxHeight),
+          ),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(shanten.toString()),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 class MahjongOverlay extends StatefulWidget {
@@ -26,6 +57,7 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
   List<String> logs = [];
 
   late Image image;
+  late dynamic analysis;
 
   bool ready = false;
 
@@ -36,21 +68,17 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
   void initState() {
     super.initState();
 
-    FlutterOverlayWindow.overlayListener.listen((event) {
-      print(event);
-      // setState(() {
-      //   toDisplay = event;
-      // });
-    });
-
     Server(
       callback: (data) {
-        print("Received data of ${data.length}");
+        var tup = parseEngineResult(data);
+        var json = tup.$1;
+        Image im = tup.$2;
         setState(() {
-          image = Image.memory(Uint8List.fromList(data));
+          image = im;
+          analysis = json;
           ready = true;
         });
-        image.image
+        im.image
             .resolve(ImageConfiguration())
             .addListener(ImageStreamListener((ImageInfo info, bool _) {
           setState(() {
@@ -70,45 +98,23 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.red, //                   <--- border color
-            width: 1,
-          ),
-        ),
-        child: FittedBox(
-          fit: BoxFit.fill,
-          // child:
+      if (!ready) {
+        return Text("");
+      }
 
-          //     // width: constraints.maxWidth,
-          //     // height: constraints.maxHeight,
-          //     !ready ? Text("No image") : image
-          // child: Stack(
-          //   fit: StackFit.expand,
-          //   children: [
-          //     !ready
-          //         ? Text("No image")
-          //         : SizedBox(
-          //             width: constraints.maxWidth,
-          //             height: constraints.maxHeight,
-          //             child: image,
-          //           ),
-          //     Center(
-          //       child: Column(
-          //         mainAxisSize: MainAxisSize.min,
-          //         children: [
-          //           Text(ready.toString()),
-          //           Text("Image: $imageHeight x $imageWidth"),
-          //           Text(
-          //               "Box: ${constraints.maxHeight} x ${constraints.maxWidth}"),
-          //         ],
-          //       ),
-          //     ),
-          //   ],
-          // ),
-        ),
-      );
+      return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.red,
+              width: 1,
+            ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AnalysisOverlay(analysis),
+            ],
+          ));
     });
   }
 }

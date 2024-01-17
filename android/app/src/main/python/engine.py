@@ -21,6 +21,11 @@ class EngineResult:
     image: bytes
     analysis: str
 
+    def to_bytes(self) -> bytes:
+        return (self.analysis.encode() +
+            ("\n").encode() +
+        self.image)
+
 class Engine:
     def __init__(self):
         # self.trainer = Trainer("3568889m238p3678s")
@@ -29,7 +34,7 @@ class Engine:
     def start(self):
         pass
 
-    def process(self, image_data) -> bytes:
+    def process(self, image_data) -> EngineResult:
         image: CVImage = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
 
         save_image(image, 'source')
@@ -43,17 +48,18 @@ class Engine:
         # detection_result.show()
 
         mpsz = get_mpsz(detection_result)
-        print(mpsz)
         hand = TileCollection.from_mpsz(mpsz)
 
         trainer = Trainer(hand)
         shanten = trainer.get_shanten()
 
-        s = json.dumps({"shanten": shanten})
-        print(s)
 
-        # return image.tobytes()
-        # To demostrate it is possible to send large amounts of data
+
+        analysis = {
+            "shanten": shanten,
+            "hand": mpsz,
+            "tiles": detection_result.labels,
+        }
 
         image = detection_result.get_debug_image()
         border = cv2.copyMakeBorder(
@@ -67,22 +73,7 @@ class Engine:
         )
         image = border
 
-
-
-        # b_channel, g_channel, r_channel = cv2.split(image)
-
-        # alpha_channel = np.ones(b_channel.shape, dtype=b_channel.dtype) * 50 #creating a dummy alpha channel image.
-
-        # image = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
-
-
-
         image_bytes: bytes = cv2.imencode('.png', image)[1].tobytes()
-        try:
-            with open('file.png', 'wb') as f:
-                f.write(image_bytes)
-        except Exception as e:
-            pass
-        print("Image bytes length", len(image_bytes))
-        return image_bytes
+        json_analysis = json.dumps(analysis)
+        return EngineResult(image=image_bytes, analysis=json_analysis)
 
