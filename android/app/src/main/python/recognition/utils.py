@@ -1,14 +1,16 @@
 from typing import List
 import os
-
 import cv2
 from PIL import Image
 
-def convert_cv_to_pil(cv_image):
+from stubs import CVImage, PILImage
+
+def convert_cv_to_pil(cv_image: CVImage) -> PILImage:
     color_converted = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
     return Image.fromarray(color_converted)
 
-def show(img):
+def show(image: CVImage):
+    img: CVImage | PILImage = image
     if not isinstance(img, Image.Image):
         img = convert_cv_to_pil(img)
     img.save("temp.png")

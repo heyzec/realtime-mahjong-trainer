@@ -1,15 +1,22 @@
 import json
 import cv2
-import numpy as np
+from dataclasses import dataclass
+
+from stubs import CVImage
 from trainer.trainer import Trainer
 from trainer.objects.tile_collection import TileCollection
 from recognition.mahjong_detector import SiftMahjongDetector, MahjongDectectionResult
-from trainer.utils.convert import mpsz_to_tile34_index
 
 def get_mpsz(result: MahjongDectectionResult):
     tiles = sorted(result.labels, key=lambda x: x[0][0])
     return ''.join(tile[1] for tile in tiles)
 
+
+
+@dataclass
+class EngineResult:
+    image: bytes
+    analysis: str
 
 class Engine:
     def __init__(self):
@@ -19,13 +26,15 @@ class Engine:
     def start(self):
         pass
 
-    def process(self, image_data: np.ndarray) -> str:
-        image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+    def process(self, image_data) -> str:
+        image: CVImage = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
 
         detector = SiftMahjongDetector()
 
         detection_result = detector.process(image)
+        print("number of detections", len(detection_result.labels))
         # detection_result.show()
+
         mpsz = get_mpsz(detection_result)
         hand = TileCollection.from_mpsz(mpsz)
 
@@ -37,7 +46,10 @@ class Engine:
 
         # return image.tobytes()
         # To demostrate it is possible to send large amounts of data
-        image_bytes = cv2.imencode('.jpg', image)[1].tobytes()
+
+        # image = detection_result.get_debug_image()
+
+        image_bytes = cv2.imencode('.png', image)[1].tobytes()
         print("Image bytes length", len(image_bytes))
         return image_bytes
 

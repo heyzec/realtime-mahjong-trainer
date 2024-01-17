@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from typing import List
 
@@ -63,7 +64,7 @@ class TileCollection:
     def count_tiles(self) -> int:
         return sum(self.tiles34)
 
-    def randomly_select(self, n: int):
+    def randomly_select(self, n: int) -> TileCollection:
         """
         Generates a random n tiles.
 

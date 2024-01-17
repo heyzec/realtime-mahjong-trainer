@@ -1,16 +1,19 @@
 import abc
 import os
+from typing import Tuple, List, Dict, Any
 import cv2
 import numpy as np
+
 from .edge import extract_tiles_bounds
 from .utils import show
+from stubs import CVImage, Rect
 
 class MahjongDetector(abc.ABC):
     def __init__(self) -> None:
         pass
 
 
-    def detect(self, image):
+    def detect(self, image: CVImage):
         pass
 
 
@@ -18,22 +21,37 @@ LABELLED_DIR = os.path.join(os.path.dirname(__file__), "./images/labelled")
 
 
 class MahjongDectectionResult:
-    def __init__(self, image: np.ndarray):
+    def __init__(self, image: CVImage):
         self.image = image
-        self.labels = []
+        self.labels: List[Tuple[Rect, str]] = []
 
-    def add(self, rect, label_name):
+    def add(self, rect: Rect, label_name: str) -> CVImage:
         self.labels.append((rect, label_name))
 
-    def show(self):
-        canvas = self.image.copy()
+    def get_debug_image(self) -> CVImage:
+        img_height, img_width, _ = self.image.shape
+        n_channels = 4
+        transparency: CVImage = np.zeros((img_height, img_width, n_channels), dtype=np.uint8)
 
         for label in self.labels:
             rect, name = label
             x,y,w,h = rect
-            cv2.rectangle(canvas, (x, y), (x+w, y+h), (0, 0, 255), thickness=3)
+            cv2.rectangle(transparency, (x, y), (x+w, y+h), (0, 0, 255), thickness=3)
             pos = (x + 5, y + 27)
-            cv2.putText(canvas, name, pos, 0, fontScale=1, color=(0,0,255), thickness=2)
+            cv2.putText(transparency, name, pos, 0, fontScale=1, color=(0,0,255), thickness=2)
+
+        return transparency
+
+
+
+    def show(self):
+        canvas = self.image.copy()
+
+        overlay = self.get_debug_image()
+
+        alpha = 0.5
+        # TODO: Fix by adding alpha channel to canvas first
+        cv2.addWeighted(overlay, alpha, canvas, 1 - alpha, 0, canvas)
 
         show(canvas)
 
@@ -42,7 +60,7 @@ class MahjongDectectionResult:
 class SiftMahjongDetector(MahjongDetector):
     def __init__(self):
         self.sift = cv2.SIFT_create()
-        self.features = {}
+        self.features: Dict[str, Tuple[Any, Any]] = {}
         self._predetect_features()
         if len(self.features) == 0:
             raise Exception("No features processed")
@@ -60,8 +78,8 @@ class SiftMahjongDetector(MahjongDetector):
             self.features[label] = (keypoints, descriptors)
 
 
-    def process(self, image):
-        rects = extract_tiles_bounds(image)
+    def process(self, image: CVImage) -> MahjongDectectionResult:
+        debug, rects = extract_tiles_bounds(image)
 
         result = MahjongDectectionResult(image)
 
@@ -80,11 +98,11 @@ class SiftMahjongDetector(MahjongDetector):
             best_label = None
             for label in self.features.keys():
 
-                matches = flann.knnMatch(d,self.features[label][1],k=2)
+                matches: List = flann.knnMatch(d,self.features[label][1],k=2)
 
                 # store all the good matches as per Lowe's ratio test.
                 good = []
-                for m,n in matches:
+                for m, n in matches:
                     if m.distance < 0.7*n.distance:
                         good.append(m)
 
@@ -108,16 +126,9 @@ class SiftMahjongDetector(MahjongDetector):
                     best_label = label
 
 
-            # print(best_label)
-            # show(join_vertical([convert_cv_to_pil(im) for im in all_draw]))
-
-
-            # actual = cv2.imread('./tiles/labelled/' + best_label + '.png')
-            # show(actual)
-            # matches = cv2.drawMatches(actual, self.features[best_label][0], tile_img, k, matches, tile_img, flags=2)
-            # show(matches)
-            # print(best_label)
-            # print(best_label)
+            assert best_label is not None
             result.add(rect, best_label)
+
+        result.image = debug
             # show(tile_img)
         return result
