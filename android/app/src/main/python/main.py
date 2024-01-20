@@ -4,21 +4,32 @@ import cv2
 import numpy as np
 
 from engine import Engine
+from recognition.matcher import Matcher
 from stubs import CVImage
 
-path = "./recognition/images/screenshots/" + random.choice(os.listdir('./recognition/images/screenshots'))
 
-engine = Engine()
+def main():
+    path = "./recognition/images/screenshots/" + random.choice(os.listdir('./recognition/images/screenshots'))
 
-with open(path, 'rb') as f:
-    b = f.read()
+    engine = Engine()
 
-byte_array: CVImage = np.frombuffer(b, np.uint8)
+    with open(path, 'rb') as f:
+        b = f.read()
 
-image = cv2.imread(path)
+    byte_array: CVImage = np.frombuffer(b, np.uint8)
 
-engine.process(byte_array)
+    image = cv2.imread(path)
+
+    engine.process(byte_array)
 
 
 
+def test_match():
+    matcher = Matcher()
+    matcher.test_and_show_within_suit('m')
+    # matcher.test_random(10)
+    # matcher.test_all()
 
+
+test_match()
+# main()
