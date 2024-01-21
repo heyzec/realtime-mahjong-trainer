@@ -39,30 +39,17 @@ public class MainActivity extends FlutterActivity {
 
   private MethodChannel channel;
 
-  MediaProjectionManager mMediaProjectionManager;
+  private MediaProjectionManager mMediaProjectionManager;
   private ScreenStreamer streamer;
   private PyObject engine;
+
+  private NetworkClient client = new NetworkClient("127.0.0.1", 55555);
+  private NetworkClient debugClient = new NetworkClient("192.168.1.1", 55555);
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    Activity activity = getActivity();
-
-    DisplayMetrics metrics = new DisplayMetrics();
-    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-    mMediaProjectionManager =
-      (MediaProjectionManager) activity.getSystemService(
-        Context.MEDIA_PROJECTION_SERVICE
-      );
-
-    streamer =
-      new ScreenStreamer(
-        metrics,
-        mMediaProjectionManager,
-        (Image img) -> processCapturedImage(img)
-      );
   }
 
   @Override
@@ -116,6 +103,23 @@ public class MainActivity extends FlutterActivity {
 
   // Effective entry point from Flutter
   private int startStream() {
+    Activity activity = getActivity();
+
+    DisplayMetrics metrics = new DisplayMetrics();
+    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+    mMediaProjectionManager =
+      (MediaProjectionManager) activity.getSystemService(
+        Context.MEDIA_PROJECTION_SERVICE
+      );
+
+    streamer =
+      new ScreenStreamer(
+        metrics,
+        mMediaProjectionManager,
+        (Image img) -> processCapturedImage(img)
+      );
+
     Intent serviceIntent = new Intent(this, MediaProjectionService.class);
 
     Log.i(TAG, "Start foreground service");
@@ -138,34 +142,21 @@ public class MainActivity extends FlutterActivity {
     byte[] encoded = ImageEncoder.encodeImageToByteArray(image);
     Log.i(TAG, String.format("Length of encoded: %d", encoded.length));
 
-    Python python = Python.getInstance();
+    byte[] bytes;
     PyObject engineResult = engine.callAttr("process_bytes", encoded);
 
-    byte[] bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
-    int bytesLength = bytes.length;
+    bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
+    Log.i(TAG, "Sending bytes to localhost:" + bytes.length);
+    client.send(bytes);
 
-    Socket socket = new Socket();
-    Log.i(TAG, "Sending n bytes:" + bytesLength);
-    try {
-      socket.connect(new InetSocketAddress("127.0.0.1", 55555), 1000);
-      DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-      Log.i(TAG, "Sending length");
-      dataOut.writeBytes(leftPadZeros(String.valueOf(bytesLength), 8));
-      Log.i(TAG, "Sending actual data");
-      dataOut.write(bytes);
-      Log.i(TAG, "closing everything");
-      dataOut.close();
-      socket.close();
-    } catch (IOException e) {
-      Log.e(TAG, "Error sending data" + e.toString());
-    }
+    bytes = engineResult.callAttr("dumps").toJava(byte[].class);
+    Log.i(TAG, "Sending bytes to debug server:" + bytes.length);
+    debugClient.send(bytes);
 
     return;
   }
 
-  static String leftPadZeros(String s, int length) {
-    return String.format("%1$" + length + "s", s).replace(' ', '0');
-  }
+
 
   int startPython() {
     if (Python.isStarted()) {

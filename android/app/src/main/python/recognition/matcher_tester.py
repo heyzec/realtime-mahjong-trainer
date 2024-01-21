@@ -47,7 +47,7 @@ class MatcherTester:
 
             result = self.matcher.compare_and_score(image1, image2)
 
-            display = result.get_display()
+            display = result.display
 
             cv2.putText(display, f"{result.score:.2f}", (80, 100), fontFace=1, fontScale=3, color=(0,0,0), thickness=5)
             to_show.append(display)
