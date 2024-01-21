@@ -1,11 +1,39 @@
-from typing import List
+from typing import List, Union, TypeVar
 import numpy as np
 from datetime import datetime
 import subprocess
 import cv2
 from PIL import Image
 
-from stubs import CVImage, PILImage
+from stubs import CVImage, PILImage, Rect
+
+RGB_BLACK = (0,0,0)
+RGB_GREEN = (0,255,0)
+RGB_WHITE = (255,255,255)
+RGB_RED = (255,0,0)
+MONO_WHITE = (255,)
+
+T = TypeVar("T")
+
+def crop_image(img: CVImage, rect: Rect):
+    assert isinstance(img, np.ndarray)
+    x,y,w,h = rect
+    img = img[y:y+h, x:x+w].copy()
+    return img
+
+def scale(img: T, factor: float) -> T:
+    if isinstance(img, Image.Image):
+        assert 0.1 < factor < 100
+        width, height = img.size
+        new_size = (int(factor * width), int(factor * height))
+        return img.resize(new_size, Image.LANCZOS)
+
+    if isinstance(img, np.ndarray):
+        w, h, *_ = img.shape
+        target_size = (int(h*factor), int(w*factor))
+        return cv2.resize(img, target_size)
+
+    assert False
 
 def try_convert_cv_to_pil(img: CVImage) -> PILImage:
     if not isinstance(img, Image.Image):
@@ -25,14 +53,18 @@ def convert_pil_to_cv(pil_image: PILImage) -> CVImage:
     return open_cv_image
 
 def show(image: CVImage):
-    img: CVImage | PILImage = image
+    img: Union[CVImage, PILImage] = image
     if not isinstance(img, Image.Image):
         img = convert_cv_to_pil(img)
-    img.save("temp.png")
+    try:
+        img.save("temp.png")
+    except OSError:
+        return
 
     try:
         if subprocess.call(['sh', '-c', 'pgrep qimgv &>/dev/null']) != 0:
             subprocess.call(['sh', '-c', 'nohup qimgv temp.png &>/dev/null &'])
+        input()
     except KeyboardInterrupt:
         exit()
 

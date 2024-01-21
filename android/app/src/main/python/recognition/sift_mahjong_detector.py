@@ -1,63 +1,8 @@
-import abc
-import os
-from typing import Tuple, List, Dict, Any
 import cv2
-import numpy as np
-
-from .edge import EdgeDetector
-from .utils import show
-from stubs import CVImage, Rect
-
-class MahjongDetector(abc.ABC):
-    def __init__(self) -> None:
-        pass
+from recognition.detector import Detector
 
 
-    def detect(self, image: CVImage):
-        pass
-
-
-LABELLED_DIR = os.path.join(os.path.dirname(__file__), "./images/labelled")
-
-
-class MahjongDectectionResult:
-    def __init__(self, image: CVImage):
-        self.image = image
-        self.labels: List[Tuple[Rect, str]] = []
-
-    def add(self, rect: Rect, label_name: str) -> CVImage:
-        self.labels.append((rect, label_name))
-
-    def get_debug_image(self) -> CVImage:
-        img_height, img_width, _ = self.image.shape
-        n_channels = 4
-        transparency: CVImage = np.zeros((img_height, img_width, n_channels), dtype=np.uint8)
-
-        for label in self.labels:
-            rect, name = label
-            x,y,w,h = rect
-            cv2.rectangle(transparency, (x, y), (x+w, y+h), (0, 0, 255), thickness=3)
-            pos = (x + 5, y + 27)
-            cv2.putText(transparency, name, pos, 0, fontScale=1, color=(0,0,255), thickness=2)
-
-        return transparency
-
-
-
-    def show(self):
-        canvas = self.image.copy()
-
-        overlay = self.get_debug_image()
-
-        alpha = 0.5
-        # TODO: Fix by adding alpha channel to canvas first
-        cv2.addWeighted(overlay, alpha, canvas, 1 - alpha, 0, canvas)
-
-        show(canvas)
-
-
-
-class SiftMahjongDetector(MahjongDetector):
+class SiftMahjongDetector(Detector):
     def __init__(self):
         self.sift = cv2.SIFT_create()
         self.features: Dict[str, Tuple[Any, Any]] = {}
