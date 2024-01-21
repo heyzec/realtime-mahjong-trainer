@@ -12,13 +12,13 @@ from stubs import CVImage, Contour, Contours, RRects, Rect, Rects
 class EdgeDetector:
     def detect(self, image: CVImage) -> Stage[Rects]:
         stage = Stage.first_image(image)
-        # show(stage.get_display())
+        # show(stage.display)
         stage = self.find_all_contours(stage)
-        # show(stage.get_display())
+        # show(stage.display)
         stage = self.filter_contours_by_shape(stage)
-        # show(stage.get_display())
+        # show(stage.display)
         stage = self.filter_contours_by_placement(stage)
-        # show(stage.get_display())
+        # show(stage.display)
 
         rects: List[Rect] = []
         contours = stage.result

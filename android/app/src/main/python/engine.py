@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 import json
 import os
+import pickle
+from typing import Any
 import cv2
 from dataclasses import dataclass
 
 import numpy as np
 from dirs import SCREENSHOTS_DIR
-from recognition.stage_result import DetectionResult
+from recognition.stage_result import DetectionResult, Stage
 from recognition.template_detector import TemplateDetector
 
 from stubs import CVImage
@@ -23,12 +27,26 @@ def get_mpsz(detection: DetectionResult):
 class EngineResult:
     image: CVImage
     analysis: str
+    stage: Stage[Any]
 
     def to_bytes(self) -> bytes:
         image_bytes: bytes = cv2.imencode('.png', self.image)[1].tobytes()
         return (self.analysis.encode() +
             ("\n").encode() +
         image_bytes)
+
+    def dumps(self) -> bytes:
+        stage = self.stage
+        while stage is not None:
+            if stage.display_callback is not None:
+                stage.display = stage.display_callback()
+                stage.display_callback = None
+            stage = stage.prev
+        return pickle.dumps(self)
+
+    @classmethod
+    def loads(cls, b: bytes) -> EngineResult:
+        return pickle.loads(b)
 
 class Engine:
     def __init__(self):
@@ -51,7 +69,7 @@ class Engine:
         detector = TemplateDetector()
 
         stage = detector.detect(image)
-        show(stage.get_display())
+        show(stage.display)
         print("number of detections", len(stage.result))
 
         mpsz = get_mpsz(stage.result)
@@ -69,7 +87,7 @@ class Engine:
             "tiles": stage.result,
         }
 
-        image = stage.get_display()
+        image = stage.display
         border = cv2.copyMakeBorder(
             image,
             top=10,
@@ -82,7 +100,7 @@ class Engine:
         image = border
 
         json_analysis = json.dumps(analysis)
-        return EngineResult(image=image, analysis=json_analysis)
+        return EngineResult(image=image, analysis=json_analysis, stage=stage)
 
 class EngineTester:
     def test(self):
@@ -93,5 +111,13 @@ class EngineTester:
         img = scale(img, 0.99)
 
         engine = Engine()
-        engine.process(img)
-        show(img)
+        result = engine.process(img)
+        print("dumping")
+        pic = result.dumps()
+
+        result = EngineResult.loads(pic)
+
+
+
+        show(result.stage.image)
+

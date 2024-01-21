@@ -52,7 +52,7 @@ def convert_pil_to_cv(pil_image: PILImage) -> CVImage:
 
     return open_cv_image
 
-def show(image: CVImage):
+def show(image: CVImage, block=True):
     img: Union[CVImage, PILImage] = image
     if not isinstance(img, Image.Image):
         img = convert_cv_to_pil(img)
@@ -64,7 +64,8 @@ def show(image: CVImage):
     try:
         if subprocess.call(['sh', '-c', 'pgrep qimgv &>/dev/null']) != 0:
             subprocess.call(['sh', '-c', 'nohup qimgv temp.png &>/dev/null &'])
-        input()
+        if block:
+            input()
     except KeyboardInterrupt:
         exit()
 
