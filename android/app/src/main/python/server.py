@@ -1,12 +1,10 @@
 from enum import Enum, auto
 import base64
 import io
-import base64
-from binascii import Error as BinasciiError
 import socket
 from typing import Callable
 from engine import EngineResult
-from recognition.utils import show
+from utils.image import show
 
 HOST = '0.0.0.0'
 PORT = 55555

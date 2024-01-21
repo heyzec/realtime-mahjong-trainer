@@ -3,9 +3,10 @@ from typing import List, Tuple
 import numpy as np
 import cv2
 
-from recognition.stage_result import Stage
-from recognition.utils import RGB_RED, MONO_WHITE, show
-from stubs import CVImage, Contour, Contours, RRects, Rect, Rects
+from utils.colors import MONO_WHITE, RGB_RED
+
+from .stage import Stage
+from utils.stubs import CVImage, Contour, Contours, RRects, Rect, Rects
 
 
 
@@ -90,7 +91,7 @@ class EdgeDetector:
             dis = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) ** 0.5
             return dis
 
-        if len(contours) == 0 is None:
+        if len(contours) == 0:
             return stage.next([], None)
 
 
@@ -130,9 +131,6 @@ class EdgeDetector:
         a = y2 - y1
         b = x1 - x2
         c = x2 * y1 - x1 * y2
-
-
-
 
 
         def d(x: int, y: int) -> float:

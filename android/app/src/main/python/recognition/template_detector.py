@@ -3,11 +3,12 @@ import os
 import cv2
 
 from dirs import LABELLED_DIR
-from recognition.edge_detector import EdgeDetector
-from recognition.detector import Detector
-from recognition.stage_result import DetectionResult, Stage
-from recognition.utils import RGB_GREEN, join_horizontal, scale, show
-from stubs import CVImage
+from utils.colors import RGB_GREEN
+from utils.image import join_horizontal, scale
+from .edge_detector import EdgeDetector
+from .detector import Detector
+from .stage import DetectionResult, Stage
+from utils.stubs import CVImage
 
 
 
