@@ -1,5 +1,5 @@
 import cv2
-from recognition.detector import Detector
+from .detector import Detector
 
 
 class SiftMahjongDetector(Detector):

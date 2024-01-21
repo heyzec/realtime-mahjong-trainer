@@ -1,20 +1,12 @@
-from typing import List, Union, TypeVar
-import numpy as np
 from datetime import datetime
+from typing import TypeVar, Union, List
 import subprocess
 import cv2
+import numpy as np
 from PIL import Image
-
-from stubs import CVImage, PILImage, Rect
-
-RGB_BLACK = (0,0,0)
-RGB_GREEN = (0,255,0)
-RGB_WHITE = (255,255,255)
-RGB_RED = (255,0,0)
-MONO_WHITE = (255,)
+from utils.stubs import CVImage, PILImage, Rect
 
 T = TypeVar("T")
-
 def crop_image(img: CVImage, rect: Rect):
     assert isinstance(img, np.ndarray)
     x,y,w,h = rect
@@ -52,7 +44,7 @@ def convert_pil_to_cv(pil_image: PILImage) -> CVImage:
 
     return open_cv_image
 
-def show(image: CVImage, block=True):
+def show(image: CVImage, block: bool = True):
     img: Union[CVImage, PILImage] = image
     if not isinstance(img, Image.Image):
         img = convert_cv_to_pil(img)

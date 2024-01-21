@@ -4,8 +4,8 @@ import numpy.typing as npt
 import cv2
 from typing import Tuple
 
-from recognition.utils import convert_cv_to_pil, convert_pil_to_cv, scale
-from stubs import CVImage
+from .utils import convert_cv_to_pil, convert_pil_to_cv, scale
+from utils.stubs import CVImage
 
 
 

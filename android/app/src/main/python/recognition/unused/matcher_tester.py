@@ -6,8 +6,8 @@ from PIL import Image
 from typing import Tuple, List
 
 from dirs import LABELLED_DIR
-from recognition.detector import Detector
-from recognition.utils import convert_pil_to_cv, join_horizontal, join_vertical, scale, show
+from .detector import Detector
+from .utils import convert_pil_to_cv, join_horizontal, join_vertical, scale, show
 
 
 class MatcherTester:
