@@ -37,19 +37,12 @@ class Engine:
         save_image(image, 'source')
 
         detector = TemplateDetector()
-
         stage = detector.detect(image)
-        show(stage.display)
-        print("number of detections", len(stage.result))
-
         mpsz = get_mpsz(stage.result)
-        print(mpsz)
         hand = TileCollection.from_mpsz(mpsz)
 
         trainer = Trainer(hand)
         shanten = trainer.get_shanten()
-
-
 
         analysis = {
             "shanten": shanten,

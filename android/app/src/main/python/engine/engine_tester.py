@@ -1,4 +1,5 @@
 import os
+import socket
 
 import cv2
 
@@ -7,6 +8,9 @@ from utils.image import scale, show
 from .engine_result import EngineResult
 from .engine import Engine
 
+
+HOST = '127.0.0.1'
+PORT = 55555
 
 class EngineTester:
     def test(self):
@@ -18,11 +22,12 @@ class EngineTester:
 
         engine = Engine()
         result = engine.process(img)
-        print("dumping")
-        pic = result.dumps()
+        b = result.dumps()
 
-        result = EngineResult.loads(pic)
+        b = str(len(b)).zfill(8).encode() + b
 
-        show(result.stage.image)
-
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            s.connect((HOST, PORT))
+            s.sendall(b)
 

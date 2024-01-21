@@ -59,7 +59,7 @@ def show(image: CVImage, block: bool = True):
         if block:
             input()
     except KeyboardInterrupt:
-        exit()
+        raise Exception("Exited")
 
 def join_horizontal(images: List[Image.Image]):
     images = [try_convert_cv_to_pil(im) for im in images]
