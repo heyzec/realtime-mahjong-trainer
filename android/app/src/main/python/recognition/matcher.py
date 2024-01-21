@@ -1,26 +1,13 @@
-import os
 import math
 import numpy as np
-import random
+import numpy.typing as npt
 import cv2
-from recognition.utils import convert_cv_to_pil, convert_pil_to_cv, join_horizontal, join_vertical, show
-import glob
-from PIL import Image
+from typing import Tuple
 
-
-
+from recognition.utils import convert_cv_to_pil, convert_pil_to_cv, scale
 from stubs import CVImage
-from dirs import LABELLED_DIR
 
-from dataclasses import dataclass
 
-@dataclass
-class MatchResult:
-    score: float
-    display_callback: object
-
-    def get_display(self):
-        return self.display_callback()
 
 class Matcher:
     def __init__(self) -> None:
@@ -31,27 +18,8 @@ class Matcher:
         search_params = dict(checks = 50)
         self.flann = cv2.FlannBasedMatcher(index_params, search_params)
 
-    @staticmethod
-    def scale(img, factor):
-        print("sacaling")
-        assert 0.1 < factor < 100
-        width, height = img.size
-        new_size = (int(factor * width), int(factor * height))
-        return img.resize(new_size, Image.LANCZOS)
 
-    @staticmethod
-    def get_random_image(pattern, scale=1):
-        print("oh no")
-        files = glob.glob(os.path.join(LABELLED_DIR, f'{pattern}.*'))
-        path = random.choice(files)
 
-        img = Image.open(path)
-
-        # scramble = random.choice([True, False])
-        img = Matcher.scale(img, scale)
-
-        image = convert_pil_to_cv(img)
-        return image
 
     @staticmethod
     def preprocess_image(img: CVImage):
@@ -70,101 +38,7 @@ class Matcher:
                                           11, 2)
         return threshold
 
-    def randomly_test(self, n):
-        pass
-            # if random.random() > P_SAME:
-            #     image1 = Matcher.get_random_image()
-            #     image2 = Matcher.get_random_image()
-            # else:
-            #     image1 = Matcher.get_random_image()
-            #     image2 = image1.copy()
-
-
-    def test_and_show(self, test_input, show_size):
-
-        to_show = []
-        for file_pattern1, file_pattern2 in test_input:
-            print(file_pattern1, file_pattern2)
-            image1 = Matcher.get_random_image(file_pattern1, scale=1.5)
-            image2 = Matcher.get_random_image(file_pattern2, scale=1)
-
-            result = self.compare_and_score(image1, image2)
-
-            display = result.get_display()
-
-            cv2.putText(display, f"{result.score:.2f}", (80, 100), fontFace=1, fontScale=3, color=(0,0,0), thickness=5)
-            to_show.append(display)
-
-        rows, cols = show_size
-        combined = join_vertical([join_horizontal(to_show[i*cols:(i+1)*cols]) for i in range(0, rows)])
-        show(combined)
-
-    def test_and_show_within_suit(self, suit: str):
-        assert suit in 'mpsz', f"{suit} is not a valid suit"
-
-        N = 81
-        show_size = (9, 9)
-
-        test_input = []
-        for k in range(N):
-            i = k // 9 + 1
-            j = k % 9 + 1
-
-            file_pattern1 = f"{i}{suit}"
-            file_pattern2 = f"{j}{suit}"
-            test_input.append((file_pattern1, file_pattern2))
-
-        self.test_and_show(test_input, show_size)
-
-
-
-    def test_random(self, n):
-        test_input = []
-        for _ in range(n):
-            file_pattern1 = f"*"
-            file_pattern2 = f"*"
-            test_input.append((file_pattern1, file_pattern2))
-
-        show_size = (n, 1)
-        self.test_and_show(test_input, show_size)
-
-
-
-
-
-
-    def test_all(self):
-        paths = [os.path.join(LABELLED_DIR, file) for file in os.listdir(LABELLED_DIR)]
-
-        for i in range(len(paths)):
-            for j in range(len(paths)):
-                # for scale in (0.8, 0.9, 1.1, 1.2):
-                for scale in (1.1,):
-                    image1 = Image.open(paths[i])
-                    image2 = Image.open(paths[j])
-
-                    image1 = convert_pil_to_cv(Matcher.scale(image1, 1.5))
-                    image2 = convert_pil_to_cv(Matcher.scale(image2, 1))
-
-
-
-
-                    result = self.compare_and_score(image1, image2)
-
-                    if i == j and result.score < 0.9:
-                        print(result.score)
-                        show(result.get_display())
-                        raise Exception()
-                    if i != j and result.score > 0.9:
-                        raise Exception()
-                    print(i, j, result.score)
-
-
-
-
-
-
-    def extract_features(self, img: CVImage):
+    def extract_features(self, img: CVImage) -> Tuple[Tuple[cv2.KeyPoint, ...], Tuple[npt.NDArray[np.float32]] ]:
         keypoints, descriptors = self.sift.detectAndCompute(img, None)
         return keypoints, descriptors
 
@@ -186,45 +60,53 @@ class Matcher:
 
         return matches, is_good
 
-        # matchesMask = mask.ravel().tolist()
 
-
-
-        # return good_matches, matchesMask
-
-    def compare(self, image1, image2) -> bool:
-        SCORE_THRESHOLD = 0.9
+    def compare(self, image1: CVImage, image2: CVImage) -> bool:
+        SCORE_THRESHOLD = 0.85
         result = self.compare_and_score(image1, image2)
         return result.score > SCORE_THRESHOLD
 
     def compare_and_score(self, image1: CVImage, image2: CVImage) -> MatchResult:
+        stats = {}
+
         image1 = Matcher.preprocess_image(image1)
         image2 = Matcher.preprocess_image(image2)
         kp1, des1 = self.extract_features(image1)
         kp2, des2 = self.extract_features(image2)
+        stats['image1_features'] = len(kp1)
+        stats['image2_features'] = len(kp2)
+
+
 
         matches, is_good = self.match_features((kp1, des1), (kp2, des2))
+        stats['stage1_matches'] = len(matches)
         good_matches = [match for (i, match) in enumerate(matches) if is_good[i]]
         n_good_matches = sum(is_good)
+        stats['stage1_good_matches'] = n_good_matches
         pts1 = np.float32([ kp1[m[0].queryIdx].pt for m in good_matches ]).reshape(-1,1,2)
         pts2 = np.float32([ kp2[m[0].trainIdx].pt for m in good_matches ]).reshape(-1,1,2)
 
 
-        def display_callback():
+        def _():
             return self.draw_matches(matches, None, image1, kp1, image2, kp2)
 
-        result = MatchResult(score=0, display_callback=display_callback)
+        result = MatchResult(score=0, display_callback=_)
 
         if n_good_matches < 4:
             return result
 
         M, mask = cv2.findHomography(pts1, pts2, cv2.RANSAC, ransacReprojThreshold=5.0)
+        print(mask)
+        stats['stage1_inlier_matches'] = mask.sum()
+        print(stats)
 
 
         if M is None:
             return result
 
-        det = np.linalg.det(M)
+        det: float = np.linalg.det(M)
+        assert isinstance(det, float)
+
         print('det', det)
         if det < 1:
             scale_factor = math.sqrt(abs(det))
@@ -236,22 +118,39 @@ class Matcher:
         if not 0.5 < scale_factor < 2:
             return result
 
-        image3 = convert_pil_to_cv(Matcher.scale(convert_cv_to_pil(image2), 1/scale_factor))
-
-
-
+        image3 = convert_pil_to_cv(scale(convert_cv_to_pil(image2), 1/scale_factor))
         kp3, des3 = self.extract_features(image3)
-        matches, is_good = self.match_features((kp1, des1), (kp3, des3))
+        stats['image3_features'] = len(kp3)
 
+
+
+        res = cv2.matchTemplate(image1,image3,cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+
+
+
+
+
+        matches, is_good = self.match_features((kp1, des1), (kp3, des3))
+        stats['stage2_matches'] = len(matches)
+
+        good_matches = [match for (i, match) in enumerate(matches) if is_good[i]]
+        n_good_matches = sum(is_good)
+        stats['stage2_good_matches'] = n_good_matches
+
+        print(stats)
 
         n_good = len(list(filter(lambda x: x, mask)))
         score = n_good / len(matches)
 
-        def display_callback():
+        def _():
             cvmask = [([1, 0] if x else [0, 0]) for x in is_good]
             return self.draw_matches(matches, cvmask, image1, kp1, image3, kp3)
 
-        return MatchResult(score=score, display_callback=display_callback)
+        score = max_val
+
+        return MatchResult(score=score, display_callback=_)
 
 
     def draw_matches(self, matches, mask, img1, kp1, img2, kp2):
