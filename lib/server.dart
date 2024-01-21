@@ -1,18 +1,8 @@
 import 'dart:io';
 
-enum ServerState {
-  empty,
-  partial,
-}
 
 class Server {
   void Function(List<int>) callback;
-
-  List<int> buffer = [];
-
-  ServerState state = ServerState.empty;
-
-  int remaining = 0;
 
   Server({
     required this.callback,
@@ -23,27 +13,30 @@ class Server {
     Future<ServerSocket> serverFuture = ServerSocket.bind('0.0.0.0', 55555);
     serverFuture.then((ServerSocket server) {
       server.listen((Socket socket) {
+        List<int> metadataBuffer = [];
+        List<int> dataBuffer = [];
+        int length = -1;
         socket.listen((List<int> data) {
-          if (state == ServerState.empty) {
+          if (length < 0) {
+            if (metadataBuffer.length + data.length < 8) {
+              metadataBuffer.addAll(data);
+              return;
+            }
+            int reserve = 8 - metadataBuffer.length;
+            metadataBuffer.addAll(data.sublist(0, reserve));
             int? dataLength =
-                int.tryParse(String.fromCharCodes(data.sublist(0, 8)));
+                int.tryParse(String.fromCharCodes(metadataBuffer));
             if (dataLength == null) {
               print("Invalid data length");
               return;
             }
+            length = dataLength;
+            data = data.sublist(reserve);
             print("Incoming connection of $dataLength");
-            data = data.sublist(8);
-            remaining = dataLength;
           }
-          buffer.addAll(data);
-          remaining -= data.length;
-          if (remaining > 0) {
-            state = ServerState.partial;
-          } else {
-            socket.close();
-            callback(buffer);
-            state = ServerState.empty;
-            buffer = [];
+          dataBuffer.addAll(data);
+          if (data.length == length) {
+            callback(dataBuffer);
           }
         });
       });

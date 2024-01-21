@@ -5,6 +5,7 @@ import socket
 from typing import Callable
 from engine import EngineResult
 from utils.image import show
+from PIL import Image
 
 HOST = '0.0.0.0'
 PORT = 55555
@@ -40,47 +41,28 @@ class Server:
             sock.listen()
 
             while True:
-
                 conn, addr = sock.accept()
-                print(f"Connected by f{addr}")
-                with conn:
-                    while True:
-                        data = conn.recv(1024)
-                        if (self.state == ServerState.empty):
-                            try:
-                                data_length = int(data[0:8].decode())
-                            except Exception as e:
-                                print(e)
-                                raise
-
-
-                            data = data[8:]
-                            self.remaining = data_length
-
-                        self.buffer.extend(data)
-                        self.remaining -= len(data)
-
-                        if self.remaining > 0:
-                            self.state = ServerState.partial
-                        else:
-                            print("closing")
-                            conn.close()
-                            self.callback(bytes(self.buffer))
-                            self.state = ServerState.empty
-                            self.buffer = bytearray()
-                            break
+                print(f"Connected by {addr}")
+                buf = bytearray()
+                while True:
+                    data = conn.recv(1024)
+                    if data == b'':
+                        break
+                    buf.extend(data)
+                print(len(buf))
+                self.callback(bytes(buf)[8:])
 
 def callback(bytes):
     print(len(bytes))
     try:
         result = EngineResult.loads(bytes)
         stage = result.stage
-        stage = stage.prev
+        stage = stage.prev.prev
 
 
         show(stage.display, block=False)
+        print("Showing")
 
-        print(result)
     except Exception as e:
         print(e)
 
