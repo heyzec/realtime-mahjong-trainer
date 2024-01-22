@@ -11,8 +11,8 @@ import android.media.projection.MediaProjectionManager;
 import android.util.DisplayMetrics;
 import androidx.core.util.Consumer;
 import com.example.realtime_mahjong_trainer.Assert;
-import io.flutter.Log;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 
 public class ScreenStreamer {
@@ -67,7 +67,7 @@ public class ScreenStreamer {
     int width = metrics.widthPixels;
     int density = metrics.densityDpi;
 
-    Log.i(
+    TimedLog.i(
       TAG,
       "Setting up a VirtualDisplay: " +
       width +
@@ -82,53 +82,32 @@ public class ScreenStreamer {
         width,
         height,
         PixelFormat.RGBA_8888,
-        // Consider making this 1, then no semaphore needed (?)
-        2
+        60
       );
 
     mImageReader.setOnImageAvailableListener(
       (ImageReader reader) -> {
-        new Thread(() -> {
-          final String TIME = Instant.now().toString();
-
-          Log.i(
-            TAG + TIME,
-            String.format("Image available %dx%d", width, height)
-          );
-
-          semaphore.acquireUninterruptibly();
-
+        TimedLog.i(TAG, "Creating a future now to process image");
+        CompletableFuture.runAsync(() -> {
           Image image = reader.acquireLatestImage();
           if (image == null) {
-            Log.i(TAG + TIME, "Image is null");
-            semaphore.release();
-            return;
+            TimedLog.i(TAG, "Image is null");
           }
           try {
-            if (previous != null) {
-              long delta =
-                Instant.now().toEpochMilli() - previous.toEpochMilli();
-              Log.i(TAG + TIME, "" + delta);
-              if (delta < MAX_RATE) {
-                Log.i(TAG + TIME, "Sleep for" + delta);
-                Thread.sleep(delta);
-              }
-            }
             this.callback.accept(image);
-            previous = Instant.now();
           } catch (Exception e) {
-            Log.i(TAG + TIME, "Exception occured" + e.toString());
+            TimedLog.i(TAG, "Exception occured" + e.toString());
             e.printStackTrace();
           } finally {
-            // Log.i(TAG + TIME, "Releasing semaphore");
             image.close(); // Release resources
-            semaphore.release();
           }
-        })
-          .start();
-      },
-      null
-    );
+          // try {
+          //   Thread.sleep(100);
+          // } catch (Exception e) {
+          //   TimedLog.i(TAG, "Exception occured" + e.toString());
+          // }
+        });
+    }, null);
 
     mVirtualDisplay =
       mMediaProjection.createVirtualDisplay(

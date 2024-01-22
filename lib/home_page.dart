@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -56,11 +58,12 @@ class _HomePageState extends State<HomePage> {
       overlayTitle: "X-SLAYER",
       overlayContent: 'Overlay Enabled',
       flag: OverlayFlag.clickThrough,
+      // flag: OverlayFlag.defaultFlag,
       visibility: NotificationVisibility.visibilityPublic,
-      positionGravity: PositionGravity.auto,
-      width: WindowSize.matchParent,
-      height: WindowSize.matchParent,
-      alignment: OverlayAlignment.bottomCenter,
+      positionGravity: PositionGravity.none,
+      width: WindowSize.fullCover,
+      height: WindowSize.fullCover,
+      alignment: OverlayAlignment.topCenter,
     );
   }
 
@@ -76,6 +79,7 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           children: [
+            Clock(),
             TextButton(
               onPressed: start,
               child: const Text("Show Overlay"),
@@ -96,5 +100,30 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+class Clock extends StatefulWidget {
+  const Clock({super.key});
+
+  @override
+  State<Clock> createState() => _ClockState();
+}
+
+class _ClockState extends State<Clock> {
+  @override
+  void initState() {
+    super.initState();
+    Timer.periodic(
+        Duration(seconds: 1),
+        (Timer t) => setState(() {
+              time = DateTime.now();
+            }));
+  }
+
+  DateTime time = DateTime.now();
+  @override
+  Widget build(BuildContext context) {
+    return Text(time.toString());
   }
 }
