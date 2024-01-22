@@ -16,7 +16,6 @@ import com.chaquo.python.PyException;
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
-import io.flutter.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.EventChannel;
@@ -25,6 +24,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.CompletableFuture;
+import java.util.Arrays;
 
 public class MainActivity extends FlutterActivity {
 
@@ -64,11 +65,13 @@ public class MainActivity extends FlutterActivity {
     channel.setMethodCallHandler((call, result) -> {
       // This method is invoked on the main thread.
       if (call.method.equals("startStream")) {
-        result.success(startStream());
+        CompletableFuture.runAsync(() -> {
+          startPython();
+          result.success(startStream());
+        });
         return;
       }
       if (call.method.equals("startPython")) {
-        result.success(startPython());
         return;
       }
 
@@ -86,7 +89,7 @@ public class MainActivity extends FlutterActivity {
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-    Log.i(
+    TimedLog.i(
       TAG,
       String.format(
         "onActivityResult: requestCode %d, resultCode %d, intent %s",
@@ -122,10 +125,10 @@ public class MainActivity extends FlutterActivity {
 
     Intent serviceIntent = new Intent(this, MediaProjectionService.class);
 
-    Log.i(TAG, "Start foreground service");
+    TimedLog.i(TAG, "Start foreground service");
     startForegroundService(serviceIntent);
 
-    Log.i(TAG, "Requesting confirmation");
+    TimedLog.i(TAG, "Requesting confirmation");
     // This initiates a prompt dialog for the user to confirm screen projection.
     // Looks like this is the legacy approach, the recommended one is
     // https://developer.android.com/guide/topics/large-screens/media-projection
@@ -138,19 +141,21 @@ public class MainActivity extends FlutterActivity {
   }
 
   void processCapturedImage(Image image) {
-    Log.i(TAG, "We got a new image!");
+    TimedLog.i(TAG, "Got a new image, encoding...");
     byte[] encoded = ImageEncoder.encodeImageToByteArray(image);
-    Log.i(TAG, String.format("Length of encoded: %d", encoded.length));
+    TimedLog.i(TAG, String.format("Length of encoded: %d, begin python processing...", encoded.length));
 
     byte[] bytes;
     PyObject engineResult = engine.callAttr("process_bytes", encoded);
+    TimedLog.i(TAG, String.format("Done python processing"));
 
     bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
-    Log.i(TAG, "Sending bytes to localhost:" + bytes.length);
+    TimedLog.i(TAG, "Sending bytes to localhost:" + bytes.length);
     client.send(bytes);
 
     bytes = engineResult.callAttr("dumps").toJava(byte[].class);
-    Log.i(TAG, "Sending bytes to debug server:" + bytes.length);
+    bytes = Arrays.copyOfRange(bytes, 0, 1000);
+    TimedLog.i(TAG, "Sending bytes to debug server:" + bytes.length);
     debugClient.send(bytes);
 
     return;
@@ -167,11 +172,11 @@ public class MainActivity extends FlutterActivity {
     try {
       engine = python.getModule("engine").get("Engine").callThrows();
     } catch (Throwable e) {
-      Log.i(TAG, e.toString());
+      TimedLog.i(TAG, e.toString());
       e.printStackTrace();
       throw new RuntimeException();
     }
-    Log.i(TAG, "started Python");
+    TimedLog.i(TAG, "started Python");
 
     return 0;
   }

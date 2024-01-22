@@ -1,6 +1,5 @@
 package com.example.realtime_mahjong_trainer;
 
-import io.flutter.Log;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,7 +32,7 @@ public class NetworkClient {
             dataOut.close();
             socket.close();
         } catch (IOException e) {
-            Log.e(TAG, "Error sending data" + e.toString());
+            TimedLog.e(TAG, "Error sending data" + e.toString());
         }
     }
 }

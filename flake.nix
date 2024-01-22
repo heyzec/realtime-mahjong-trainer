@@ -34,6 +34,7 @@ outputs = { self, nixpkgs, flake-utils, nixpkgs-python }:
             flutter
             androidSdk
             jdk17
+            # android-studio
 
             (let
               python-packages = ps: with ps; [

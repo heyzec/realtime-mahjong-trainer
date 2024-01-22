@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.hardware.HardwareBuffer;
 import android.media.Image;
 import android.util.Base64;
-import io.flutter.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -28,7 +27,6 @@ public class ImageEncoder {
     int width = image.getWidth();
     int height = image.getHeight();
 
-    Log.i(TAG, String.format("Format: %s", image.getFormat()));
     // This class is hardcoded to only able to accept this format.
     if (image.getFormat() != HardwareBuffer.RGBA_8888) {
       return null;
