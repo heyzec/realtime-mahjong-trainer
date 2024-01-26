@@ -77,10 +77,14 @@ class TemplateDetector(Detector):
         scale_factor = 1 / math.sqrt((w1 * h1) / (w2 * h2))
         img1 = scale(img1, scale_factor)
 
-        res = cv2.matchTemplate(img1, img2, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        try:
+            res = cv2.matchTemplate(img1, img2, cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+            score = max_val
+        except Exception as e:
+            score = 0
 
-        return max_val
+        return score
 
     # def detect_corners(self, stage):
     #     # img = stage.result

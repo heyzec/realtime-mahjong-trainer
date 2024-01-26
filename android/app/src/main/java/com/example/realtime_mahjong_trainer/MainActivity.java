@@ -83,6 +83,9 @@ public class MainActivity extends FlutterActivity {
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
+    if (streamer == null) {
+      return;
+    }
     DisplayMetrics metrics = new DisplayMetrics();
     getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
     streamer.restartStream(metrics);
@@ -96,11 +99,14 @@ public class MainActivity extends FlutterActivity {
         "onActivityResult: requestCode %d, resultCode %d, intent %s",
         requestCode,
         resultCode,
-        intent.toString()
+        intent != null ? intent.toString() : "null"
       )
     );
 
     if (requestCode == REQUEST_MEDIA_PROJECTION) {
+      if (intent == null) {
+        return;
+      }
       streamer.startStream(resultCode, intent);
       processor = new ImageProcessor(engine, () -> streamer.acquireLatestImage());
       processor.start();
