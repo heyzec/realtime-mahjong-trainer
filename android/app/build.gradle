@@ -83,6 +83,8 @@ chaquopy {
 
             install("pillow")
         }
+        // This shouldn't be necessary...
+        buildPython("/run/current-system/sw/bin/python")
     }
 }
 

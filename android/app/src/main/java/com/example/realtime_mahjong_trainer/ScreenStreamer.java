@@ -25,8 +25,6 @@ public class ScreenStreamer {
   private ImageReader mImageReader;
   private VirtualDisplay mVirtualDisplay;
 
-  private Consumer<Image> callback;
-
   private Semaphore semaphore;
 
   private static int MAX_RATE = 5000;
@@ -35,12 +33,10 @@ public class ScreenStreamer {
 
   public ScreenStreamer(
     DisplayMetrics metrics,
-    MediaProjectionManager mMediaProjectionManager,
-    Consumer<Image> callback
+    MediaProjectionManager mMediaProjectionManager
   ) {
     this.metrics = metrics;
     this.mMediaProjectionManager = mMediaProjectionManager;
-    this.callback = callback;
     this.semaphore = new Semaphore(1);
   }
 
@@ -85,29 +81,29 @@ public class ScreenStreamer {
         60
       );
 
-    mImageReader.setOnImageAvailableListener(
-      (ImageReader reader) -> {
-        TimedLog.i(TAG, "Creating a future now to process image");
-        CompletableFuture.runAsync(() -> {
-          Image image = reader.acquireLatestImage();
-          if (image == null) {
-            TimedLog.i(TAG, "Image is null");
-          }
-          try {
-            this.callback.accept(image);
-          } catch (Exception e) {
-            TimedLog.i(TAG, "Exception occured" + e.toString());
-            e.printStackTrace();
-          } finally {
-            image.close(); // Release resources
-          }
-          // try {
-          //   Thread.sleep(100);
-          // } catch (Exception e) {
-          //   TimedLog.i(TAG, "Exception occured" + e.toString());
-          // }
-        });
-    }, null);
+//     mImageReader.setOnImageAvailableListener(
+//       (ImageReader reader) -> {
+//         TimedLog.i(TAG, "Creating a future now to process image");
+//         CompletableFuture.runAsync(() -> {
+//           Image image = reader.acquireLatestImage();
+//           if (image == null) {
+//             TimedLog.i(TAG, "Image is null");
+//           }
+//           try {
+//             this.callback.accept(image);
+//           } catch (Exception e) {
+//             TimedLog.i(TAG, "Exception occured" + e.toString());
+//             e.printStackTrace();
+//           } finally {
+// //            image.close(); // Release resources
+//           }
+//           // try {
+//           //   Thread.sleep(100);
+//           // } catch (Exception e) {
+//           //   TimedLog.i(TAG, "Exception occured" + e.toString());
+//           // }
+//         });
+//     }, null);
 
     mVirtualDisplay =
       mMediaProjection.createVirtualDisplay(
@@ -120,5 +116,9 @@ public class ScreenStreamer {
         null,
         null
       );
+  }
+
+  public Image acquireLatestImage() {
+    return mImageReader.acquireLatestImage();
   }
 }
