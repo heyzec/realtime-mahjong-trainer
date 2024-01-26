@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
-import java.util.Arrays;
+
 
 public class MainActivity extends FlutterActivity {
 
@@ -42,10 +42,11 @@ public class MainActivity extends FlutterActivity {
 
   private MediaProjectionManager mMediaProjectionManager;
   private ScreenStreamer streamer;
+  // TODO: Move to ImageProcessor
   private PyObject engine;
+  private ImageProcessor processor;
 
-  private NetworkClient client = new NetworkClient("127.0.0.1", 55555);
-  private NetworkClient debugClient = new NetworkClient("192.168.1.1", 55555);
+
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -101,6 +102,8 @@ public class MainActivity extends FlutterActivity {
 
     if (requestCode == REQUEST_MEDIA_PROJECTION) {
       streamer.startStream(resultCode, intent);
+      processor = new ImageProcessor(engine, () -> streamer.acquireLatestImage());
+      processor.start();
     }
   }
 
@@ -119,8 +122,7 @@ public class MainActivity extends FlutterActivity {
     streamer =
       new ScreenStreamer(
         metrics,
-        mMediaProjectionManager,
-        (Image img) -> processCapturedImage(img)
+        mMediaProjectionManager
       );
 
     Intent serviceIntent = new Intent(this, MediaProjectionService.class);
@@ -140,26 +142,7 @@ public class MainActivity extends FlutterActivity {
     return 0;
   }
 
-  void processCapturedImage(Image image) {
-    TimedLog.i(TAG, "Got a new image, encoding...");
-    byte[] encoded = ImageEncoder.encodeImageToByteArray(image);
-    TimedLog.i(TAG, String.format("Length of encoded: %d, begin python processing...", encoded.length));
 
-    byte[] bytes;
-    PyObject engineResult = engine.callAttr("process_bytes", encoded);
-    TimedLog.i(TAG, String.format("Done python processing"));
-
-    bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
-    TimedLog.i(TAG, "Sending bytes to localhost:" + bytes.length);
-    client.send(bytes);
-
-    bytes = engineResult.callAttr("dumps").toJava(byte[].class);
-    bytes = Arrays.copyOfRange(bytes, 0, 1000);
-    TimedLog.i(TAG, "Sending bytes to debug server:" + bytes.length);
-    debugClient.send(bytes);
-
-    return;
-  }
 
 
 
