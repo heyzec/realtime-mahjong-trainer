@@ -11,9 +11,7 @@ import android.media.projection.MediaProjectionManager;
 import android.util.DisplayMetrics;
 import androidx.core.util.Consumer;
 import com.example.realtime_mahjong_trainer.Assert;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Semaphore;
 
 public class ScreenStreamer {
 
@@ -25,19 +23,24 @@ public class ScreenStreamer {
   private ImageReader mImageReader;
   private VirtualDisplay mVirtualDisplay;
 
-  private Semaphore semaphore;
+  private int width = 0;
+  private int height = 0;
+  private int density = 0;
+
 
   private static int MAX_RATE = 5000;
 
-  private Instant previous;
 
   public ScreenStreamer(
-    DisplayMetrics metrics,
+    int width,
+    int height,
+    int density,
     MediaProjectionManager mMediaProjectionManager
   ) {
-    this.metrics = metrics;
+    this.width = width;
+    this.height = height;
+    this.density = density;
     this.mMediaProjectionManager = mMediaProjectionManager;
-    this.semaphore = new Semaphore(1);
   }
 
   public void startStream(int mResultCode, Intent mResultData) {
@@ -47,9 +50,11 @@ public class ScreenStreamer {
     setupResources();
   }
 
-  public void restartStream(DisplayMetrics metrics) {
+  public void restartStream(int width, int height, int density) {
     teardownResources();
-    this.metrics = metrics;
+    this.width = width;
+    this.height = height;
+    this.density = density;
     setupResources();
   }
 
@@ -63,10 +68,6 @@ public class ScreenStreamer {
   }
 
   private void setupResources() {
-    int height = metrics.heightPixels;
-    int width = metrics.widthPixels;
-    int density = metrics.densityDpi;
-
     TimedLog.i(
       TAG,
       "Setting up a VirtualDisplay: " +

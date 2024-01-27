@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.WindowMetrics;
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -52,21 +53,31 @@ public class MainActivity extends FlutterActivity {
       );
     channel.setMethodCallHandler((call, result) -> {
       // This method is invoked on the main thread.
+
+
+      Runnable toRun = null;
       if (call.method.equals("startProcessing")) {
-        CompletableFuture.runAsync(() -> {
+        toRun = () -> {
           result.success(prepareStream());
-        });
-        return;
+        };
       }
       if (call.method.equals("stopProcessing")) {
-        CompletableFuture.runAsync(() -> {
+        toRun = () -> {
           stopStream();
           result.success(0);
-        });
+        };
+      }
+
+      if (toRun == null) {
+        result.notImplemented();
         return;
       }
 
-      result.notImplemented();
+      CompletableFuture.runAsync(toRun).exceptionally(ex -> {
+        TimedLog.e(TAG, "Error: " + ex.getMessage());
+        ex.printStackTrace();
+        return null;
+      });
     });
   }
 
@@ -76,9 +87,16 @@ public class MainActivity extends FlutterActivity {
     if (streamer == null) {
       return;
     }
-    DisplayMetrics metrics = new DisplayMetrics();
-    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-    streamer.restartStream(metrics);
+
+    WindowMetrics wm = getActivity().getWindowManager().getCurrentWindowMetrics();
+    DisplayMetrics dm = new DisplayMetrics();
+    getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+    streamer.restartStream(
+            wm.getBounds().width(),
+            wm.getBounds().height(),
+            dm.densityDpi
+    );
   }
 
   @Override
@@ -101,12 +119,14 @@ public class MainActivity extends FlutterActivity {
     }
   }
 
+
   // Effective entry point from Flutter
   private int prepareStream() {
     Activity activity = getActivity();
 
-    DisplayMetrics metrics = new DisplayMetrics();
-    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    WindowMetrics wm = activity.getWindowManager().getCurrentWindowMetrics();
+    DisplayMetrics dm = new DisplayMetrics();
+    activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
 
     mMediaProjectionManager =
       (MediaProjectionManager) activity.getSystemService(
@@ -115,7 +135,9 @@ public class MainActivity extends FlutterActivity {
 
     streamer =
       new ScreenStreamer(
-        metrics,
+        wm.getBounds().width(),
+        wm.getBounds().height(),
+        dm.densityDpi,
         mMediaProjectionManager
       );
 
