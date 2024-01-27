@@ -53,6 +53,10 @@ public class ScreenStreamer {
     setupResources();
   }
 
+  public void stopStream(){
+    teardownResources();
+  }
+
   private void teardownResources() {
     mVirtualDisplay.release();
     mImageReader.close();

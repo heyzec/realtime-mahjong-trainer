@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:realtime_mahjong_trainer/channel.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
 
   static const channel = MethodChannel(CHANNEL_NAME);
 
-  String _python = 'Python result not ready';
+  bool isProcessing = false;
 
   @override
   void initState() {
@@ -33,15 +34,19 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> recordForAWhile() async {
+  Future<void> setProcessingState(bool start) async {
     try {
-      await channel.invokeMethod<int>('startStream');
+      if (start) {
+        await channel.invokeMethod<int>('startProcessing');
+      } else {
+        await channel.invokeMethod<int>('stopProcessing');
+      }
     } on Exception catch (e) {
       print(e);
     }
   }
 
-  void start() async {
+  void showOverlay() async {
     if (await FlutterOverlayWindow.isActive()) {
       print("Overlay already open.");
       return;
@@ -67,6 +72,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void hideOverlay() async {
+    await FlutterOverlayWindow.closeOverlay();
+  }
+
+  void permissions() async {
+    if (!(await Permission.notification.isGranted)) {
+      print("requesting");
+      await Permission.notification.request();
+    } else {
+      print("has permission");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -79,23 +97,34 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           children: [
-            Clock(),
             TextButton(
-              onPressed: start,
-              child: const Text("Show Overlay"),
-            ),
-            TextButton(
-              onPressed: recordForAWhile,
-              child: Text("Start Streaming"),
-            ),
-            TextButton(
-              onPressed: () async {
-                await channel.invokeMethod('startPython');
-                // var result = await Chaquopy.executeCode("print('hello world')");
-                // print(result);
+              onPressed: () {
+                permissions();
               },
-              child: Text(_python),
+              child: Text("Grant permissions"),
             ),
+            (isProcessing
+                ? TextButton(
+                    onPressed: () {
+                      setProcessingState(false);
+                      hideOverlay();
+                      setState(() {
+                        isProcessing = false;
+                      });
+                    },
+                    child: Text("Stop Streaming"),
+                  )
+                : TextButton(
+                    onPressed: () {
+                      showOverlay();
+                      setProcessingState(true);
+                      setState(() {
+                        isProcessing = true;
+                      });
+                    },
+                    child: Text("Start Streaming"),
+                  )),
+            Clock(),
           ],
         ),
       ),
