@@ -65,10 +65,10 @@ class _HomePageState extends State<HomePage> {
       flag: OverlayFlag.clickThrough,
       // flag: OverlayFlag.defaultFlag,
       visibility: NotificationVisibility.visibilityPublic,
-      positionGravity: PositionGravity.none,
-      width: WindowSize.fullCover,
-      height: WindowSize.fullCover,
-      alignment: OverlayAlignment.topCenter,
+      positionGravity: PositionGravity.auto,
+      width: WindowSize.matchParent,
+      height: WindowSize.matchParent,
+      alignment: OverlayAlignment.bottomCenter,
     );
   }
 
@@ -89,44 +89,52 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
+    double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Mahjong"),
       ),
-      body: Center(
-        child: Column(
-          children: [
-            TextButton(
-              onPressed: () {
-                permissions();
-              },
-              child: Text("Grant permissions"),
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          print("MAIN=============================");
+          print(devicePixelRatio * constraints.maxHeight);
+          print(devicePixelRatio * constraints.maxWidth);
+          return Center(
+            child: Column(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    permissions();
+                  },
+                  child: Text("Grant permissions"),
+                ),
+                (isProcessing
+                    ? TextButton(
+                        onPressed: () {
+                          setProcessingState(false);
+                          hideOverlay();
+                          setState(() {
+                            isProcessing = false;
+                          });
+                        },
+                        child: Text("Stop Streaming"),
+                      )
+                    : TextButton(
+                        onPressed: () {
+                          showOverlay();
+                          setProcessingState(true);
+                          setState(() {
+                            isProcessing = true;
+                          });
+                        },
+                        child: Text("Start Streaming"),
+                      )),
+                Clock(),
+              ],
             ),
-            (isProcessing
-                ? TextButton(
-                    onPressed: () {
-                      setProcessingState(false);
-                      hideOverlay();
-                      setState(() {
-                        isProcessing = false;
-                      });
-                    },
-                    child: Text("Stop Streaming"),
-                  )
-                : TextButton(
-                    onPressed: () {
-                      showOverlay();
-                      setProcessingState(true);
-                      setState(() {
-                        isProcessing = true;
-                      });
-                    },
-                    child: Text("Start Streaming"),
-                  )),
-            Clock(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

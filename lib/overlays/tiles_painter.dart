@@ -9,7 +9,7 @@ class TilesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = Colors.blue.withAlpha(50)
+      ..color = Colors.blue.withAlpha(255)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 

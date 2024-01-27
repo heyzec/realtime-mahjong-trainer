@@ -25,7 +25,24 @@ void overlayMain() {
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MahjongOverlay(),
+      home: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+        double correction = 24;
+        return Column(
+          children: [
+            SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight - correction,
+              child: OverflowBox(
+                alignment: Alignment.bottomCenter,
+                maxHeight: constraints.maxHeight,
+                child: MahjongOverlay(),
+              ),
+            ),
+            Container(color: Colors.orange, height: correction),
+          ],
+        );
+      }),
     ),
   );
 }

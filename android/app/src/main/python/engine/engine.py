@@ -33,6 +33,8 @@ class Engine:
         return self.process(image)
 
     def process(self, image: CVImage) -> EngineResult:
+        print("=============================BEGIN Process")
+        print(image.shape)
 
         save_image(image, 'source')
 
@@ -51,16 +53,19 @@ class Engine:
         }
 
         image = stage.display
-        border = cv2.copyMakeBorder(
-            image,
-            top=10,
-            bottom=10,
-            left=10,
-            right=10,
-            borderType=cv2.BORDER_CONSTANT,
-            value=(0, 255, 0, 255)
-        )
-        image = border
+        # border = cv2.copyMakeBorder(
+        #     image,
+        #     top=10,
+        #     bottom=10,
+        #     left=10,
+        #     right=10,
+        #     borderType=cv2.BORDER_CONSTANT,
+        #     value=(0, 255, 0, 255)
+        # )
+        # image = border
 
         json_analysis = json.dumps(analysis)
-        return EngineResult(image=image, analysis=json_analysis, stage=stage)
+        res = EngineResult(image=image, analysis=json_analysis, stage=stage)
+        print("=============================END Process")
+        print(image.shape)
+        return res

@@ -84,6 +84,9 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
           setState(() {
             imageWidth = info.image.width;
             imageHeight = info.image.height;
+            print("=====================================================IMG");
+            print(imageHeight);
+            print(imageWidth);
           });
         }));
       },
@@ -98,15 +101,23 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
+      double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+      print(
+          "=====================================================Constrtraints");
+      print(constraints.maxHeight * devicePixelRatio);
+      print(constraints.maxWidth * devicePixelRatio);
+
       if (!ready) {
         return Text("");
       }
 
+      return AnalysisOverlay(analysis);
+      return RainbowBorder(child: AnalysisOverlay(analysis));
       return Container(
           decoration: BoxDecoration(
             border: Border.all(
               color: Colors.red,
-              width: 1,
+              width: 0,
             ),
           ),
           child: Stack(
@@ -116,5 +127,38 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
             ],
           ));
     });
+  }
+}
+
+class RainbowBorder extends StatelessWidget {
+  final Widget child;
+
+  RainbowBorder({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+      Widget boxesInBoxes = Container();
+
+      int n = 5;
+      for (int i = 0; i < n; i++) {
+        boxesInBoxes = Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.primaries[i],
+              width: 2,
+            ),
+          ),
+          child: boxesInBoxes,
+        );
+      }
+
+    return SizedBox.expand(
+      child: Stack(
+        children: [
+          child,
+          boxesInBoxes,
+        ],
+      ),
+    );
   }
 }
