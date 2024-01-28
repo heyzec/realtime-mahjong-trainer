@@ -44,7 +44,7 @@ def expand_mpsz(s: str) -> List[str]:
                 output.append(ch2 + ch)
             temp = []
         else:
-            raise ValueError(f"The queried hand contains an unrecognised character: {ch}")
+            raise ValueError(f"The queried hand contains an unrecognised character: {ch} ({s})")
 
     return output
 

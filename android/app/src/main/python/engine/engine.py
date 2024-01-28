@@ -1,6 +1,6 @@
 from __future__ import annotations
 import traceback
-from typing import Dict
+from typing import Dict, Optional
 
 import json
 import os
@@ -25,8 +25,7 @@ def get_mpsz(detection: DetectionResult):
 
 class Engine:
     def __init__(self):
-        # self.trainer = Trainer("3568889m238p3678s")
-        pass
+        self.trainer = None
 
     def start(self):
         pass
@@ -49,26 +48,76 @@ class Engine:
         image: CVImage = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         return self.process(image)
 
-    def process(self, image: CVImage) -> EngineResult:
+    def update_trainer(self, hand: TileCollection) -> Optional[str]:
+        if len(hand) not in (13, 14):
+            print(f"Odd hand length of {len(hand)}")
+            return
+
+        if self.trainer is None:
+            print(f"First new hand: {hand}")
+            self.trainer = Trainer(hand)
+            return
+
+        prev_hand = self.trainer.hand
+        if hand == prev_hand:
+            print(f"Hand did not change: {hand}")
+            return
+
+        diff = hand.get_difference(prev_hand)
+        delta = sum(abs(x) for x in diff.values())
+
+        if delta > 1:
+            print("Hand reloaded")
+            self.trainer = Trainer(hand)
+            return
+
+        if delta != 1:
+            assert False
+
+        tile, change = list(diff.items())[0]
+        if len(hand) == 13 and len(prev_hand) == 14:
+            assert change == -1
+            print(f"Discard detected: {tile}")
+            msg = self.trainer.discard(tile)
+            assert(len(self.trainer.hand)) == 13
+            return msg
+
+        if len(hand) == 14 and len(prev_hand) == 13:
+            assert change == 1
+            print(f"Draw detected: {tile}")
+            self.trainer.draw(tile)
+            assert(len(self.trainer.hand)) == 14
+            return
+
+        print(f"Unknown action {len(hand)} -> {len(prev_hand)} change:{change}")
+
+
+    def process(self, image: CVImage) -> Optional[EngineResult]:
         try:
-            print("=============================BEGIN Process")
             start_time = time.time()
-            print(image.shape)
 
             target_set = self.load_target_images()
 
             detector = TemplateDetector(target_set)
             stage = detector.detect(image)
             mpsz = get_mpsz(stage.result)
+
+            if mpsz == "":
+                print("No tiles detected")
+                return
+
             hand = TileCollection.from_mpsz(mpsz)
 
-            trainer = Trainer(hand)
-            shanten = trainer.get_shanten()
+            commentary = self.update_trainer(hand)
+
+            shanten = self.trainer.get_shanten()
+
 
             analysis = {
                 "shanten": shanten,
                 "hand": mpsz,
                 "tiles": stage.result,
+                "commentary": commentary,
             }
 
             image = stage.display

@@ -1,3 +1,4 @@
+from typing import Dict
 from .objects.tile import Tile
 from .objects.tile_collection import TileCollection
 from .utils.shanten import calculate_shanten
@@ -10,9 +11,9 @@ class Trainer:
     def get_shanten(self):
         return calculate_shanten(self.hand)
 
-    def calculate_discards(self):
+    def calculate_discards(self) -> Dict[Tile, int]:
         hand = self.hand
-        output = {}
+        output: Dict[Tile, int] = {}
 
         base_shanten = calculate_shanten(hand)
         for tile in hand.unique:
@@ -24,17 +25,23 @@ class Trainer:
 
         return output
 
-    def discard(self, tile: Tile):
+    def discard(self, tile: Tile) -> str:
         valid_discards = self.calculate_discards()
         best_ukeire = max(valid_discards.values())
         if tile not in valid_discards:
             message = ("Increases your shanten - you are now further from ready.")
-            return message
-        if valid_discards[tile] != best_ukeire:
+        elif valid_discards[tile] != best_ukeire:
             message = ("Could be better")
-            return message
-        message = ("That was the best choice!")
+        else:
+            message = ("That was the best choice!")
+
+        self.hand = self.hand.remove_tile(tile)
         return message
+
+    def draw(self, tile: Tile):
+        self.hand = self.hand.add_tile(tile)
+
+
 
 
 

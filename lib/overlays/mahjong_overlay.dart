@@ -26,6 +26,7 @@ class AnalysisOverlay extends StatelessWidget {
     int shanten = analysis['shanten'];
     String hand = analysis['hand'];
     List<dynamic> tiles = analysis['tiles'];
+    String? commentary = analysis['commentary'];
 
     double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
 
@@ -37,11 +38,32 @@ class AnalysisOverlay extends StatelessWidget {
             size: Size(constraints.maxWidth, constraints.maxHeight),
           ),
         ),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(shanten.toString()),
-          ],
+        Container(
+          alignment: Alignment.topRight,
+          padding: const EdgeInsets.all(50),
+          child: Container(
+            color: Colors.lightBlue,
+            child: DefaultTextStyle(
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+              ),
+              child: SizedBox(
+                width: 200,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text("Shanten: ${shanten.toString()}"),
+                      Text(commentary ?? ""),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -94,7 +116,6 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
 
   @override
   Widget build(BuildContext context) {
-
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
@@ -129,20 +150,20 @@ class RainbowBorder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      Widget boxesInBoxes = Container();
+    Widget boxesInBoxes = Container();
 
-      int n = 5;
-      for (int i = 0; i < n; i++) {
-        boxesInBoxes = Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.primaries[i],
-              width: 2,
-            ),
+    int n = 5;
+    for (int i = 0; i < n; i++) {
+      boxesInBoxes = Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.primaries[i],
+            width: 2,
           ),
-          child: boxesInBoxes,
-        );
-      }
+        ),
+        child: boxesInBoxes,
+      );
+    }
 
     return SizedBox.expand(
       child: Stack(

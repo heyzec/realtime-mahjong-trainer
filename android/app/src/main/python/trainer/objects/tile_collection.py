@@ -1,6 +1,6 @@
 from __future__ import annotations
 import random
-from typing import List
+from typing import Dict, List
 
 from ..objects.tile import Tile
 from ..utils.convert import expand_mpsz, mpsz_to_tile34_index, tiles34_index_to_mpsz
@@ -84,4 +84,26 @@ class TileCollection:
             self.tiles34[index] -= 1
 
         return hand
+
+    def __eq__(self, other: object):
+        return isinstance(other, TileCollection) and self.tiles34 == other.tiles34
+
+    def get_difference(self, other: TileCollection):
+        output: Dict[Tile, int] = {}
+        for i in range(34):
+            d = self.tiles34[i] - other.tiles34[i]
+            if d == 0:
+                continue
+            tile = Tile.from_tile34_index(i)
+            output[tile] = d
+        return output
+
+    def __len__(self):
+        return sum(self.tiles34)
+
+    def __repr__(self):
+        mpsz = ""
+        for tile in self.all:
+            mpsz += str(tile)
+        return f"TileCollection({mpsz})"
 

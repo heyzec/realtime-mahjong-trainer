@@ -11,6 +11,11 @@ class Tile:
     def __init__(self, name: str):
         self.name = name
 
+    @classmethod
+    def from_tile34_index(cls, index: int):
+        label = tiles34_index_to_mpsz(index)
+        return Tile(label)
+
     def __repr__(self):
         return f"Tile({self.name})"
 
