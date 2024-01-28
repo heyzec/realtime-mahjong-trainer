@@ -49,13 +49,13 @@ def show(image: CVImage, block: bool = True):
     if not isinstance(img, Image.Image):
         img = convert_cv_to_pil(img)
     try:
-        img.save("temp.png")
+        img.save("/tmp/mahjong.png")
     except OSError:
         return
 
     try:
         if subprocess.call(['sh', '-c', 'pgrep qimgv &>/dev/null']) != 0:
-            subprocess.call(['sh', '-c', 'nohup qimgv temp.png &>/dev/null &'])
+            subprocess.call(['sh', '-c', 'nohup qimgv /tmp/mahjong.png &>/dev/null &'])
         if block:
             input()
     except KeyboardInterrupt:

@@ -27,19 +27,40 @@ class Trainer:
 
     def discard(self, tile: Tile) -> str:
         valid_discards = self.calculate_discards()
-        best_ukeire = max(valid_discards.values())
+
+        best_discards = []
+        best_ukeire = 0
+        for discard, ukeire in valid_discards.items():
+            if ukeire > best_ukeire:
+                best_discards = [discard]
+                best_ukeire = ukeire
+            elif ukeire == best_ukeire:
+                best_discards.append(discard)
+
         if tile not in valid_discards:
-            message = ("Increases your shanten - you are now further from ready.")
+            message = (
+                f"You discarded {tile}, which increases your shanten!" + '\n'
+                "You are now further from ready.")
         elif valid_discards[tile] != best_ukeire:
-            message = ("Could be better")
+            message = (
+                f"You discarded {tile} which results in {valid_discards[tile]} tiles that can improve your hand." + '\n'
+                f"The most efficient tiles are {','.join(str(e) for e in best_discards)}, which results in {best_ukeire}.")
         else:
-            message = ("That was the best choice!")
+            alternatives = best_discards.copy()
+            alternatives.remove(tile)
+            message = (
+                f"You discarded {tile} which results in {valid_discards[tile]} tiles that can improve your hand." + '\n'
+                f"That was the best choice!")
+
+            if len(best_discards) > 1:
+                message += '\n' + f"Other discards include {','.join(str(e) for e in alternatives)}"
 
         self.hand = self.hand.remove_tile(tile)
         return message
 
-    def draw(self, tile: Tile):
+    def draw(self, tile: Tile) -> str:
         self.hand = self.hand.add_tile(tile)
+        return f"You drew a {tile}."
 
 
 

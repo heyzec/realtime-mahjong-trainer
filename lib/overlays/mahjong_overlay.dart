@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:realtime_mahjong_trainer/overlays/analysis.dart';
 import 'package:realtime_mahjong_trainer/overlays/tiles_painter.dart';
 import 'package:realtime_mahjong_trainer/server.dart';
 
@@ -17,59 +18,6 @@ parseEngineResult(List<int> b) {
   return (json, image);
 }
 
-class AnalysisOverlay extends StatelessWidget {
-  final dynamic analysis;
-  const AnalysisOverlay(this.analysis);
-
-  @override
-  Widget build(BuildContext context) {
-    int shanten = analysis['shanten'];
-    String hand = analysis['hand'];
-    List<dynamic> tiles = analysis['tiles'];
-    String? commentary = analysis['commentary'];
-
-    double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-
-    return Stack(
-      children: [
-        LayoutBuilder(
-          builder: (_, constraints) => CustomPaint(
-            painter: TilesPainter(tiles, devicePixelRatio),
-            size: Size(constraints.maxWidth, constraints.maxHeight),
-          ),
-        ),
-        Container(
-          alignment: Alignment.topRight,
-          padding: const EdgeInsets.all(50),
-          child: Container(
-            color: Colors.lightBlue,
-            child: DefaultTextStyle(
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-              ),
-              child: SizedBox(
-                width: 200,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text("Shanten: ${shanten.toString()}"),
-                      Text(commentary ?? ""),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class MahjongOverlay extends StatefulWidget {
   @override
   State<MahjongOverlay> createState() => _MahjongOverlayState();
@@ -79,7 +27,7 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
   List<String> logs = [];
 
   late Image image;
-  late dynamic analysis;
+  late Map<String, dynamic> result;
 
   bool ready = false;
 
@@ -97,7 +45,7 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
         Image im = tup.$2;
         setState(() {
           image = im;
-          analysis = json;
+          result = json;
           ready = true;
         });
         im.image
@@ -124,8 +72,27 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
         return Text("");
       }
 
-      return AnalysisOverlay(analysis);
-      return RainbowBorder(child: AnalysisOverlay(analysis));
+      String hand = result['hand'];
+      List<dynamic> tiles = result['tiles'];
+      Map<String, dynamic>? analysis = result['analysis'];
+
+      return Stack(
+        children: [
+          LayoutBuilder(
+            builder: (_, constraints) => CustomPaint(
+              painter: TilesPainter(tiles, devicePixelRatio),
+              size: Size(constraints.maxWidth, constraints.maxHeight),
+            ),
+          ),
+          Container(
+              alignment: Alignment.topRight,
+              padding: const EdgeInsets.all(50),
+              child: Analysis(analysis)),
+        ],
+      );
+
+      return Analysis(result);
+      return RainbowBorder(child: Analysis(result));
       return Container(
           decoration: BoxDecoration(
             border: Border.all(
@@ -136,7 +103,7 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              AnalysisOverlay(analysis),
+              Analysis(result),
             ],
           ));
     });

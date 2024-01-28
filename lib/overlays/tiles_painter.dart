@@ -8,13 +8,16 @@ class TilesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final int offsetX = 10;
+    final int offsetY = -25;
+
     Paint paint = Paint()
       // Painting a border around tiles will affect edge detection
       ..color = Colors.blue.withAlpha(50)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    for (var tile in tiles) {
+    tiles.forEach((tile) {
       var rect = tile[0];
       var tileName = tile[1];
       double x = rect[0] / devicePixelRatio;
@@ -23,14 +26,14 @@ class TilesPainter extends CustomPainter {
       double h = rect[3] / devicePixelRatio;
       canvas.drawRect(Rect.fromLTWH(x, y, w, h), paint);
       TextSpan span =
-          TextSpan(style: TextStyle(color: Colors.red[600]), text: tileName);
+          TextSpan(style: TextStyle(color: Colors.white), text: tileName);
       TextPainter tp = TextPainter(
           text: span,
           textAlign: TextAlign.left,
           textDirection: TextDirection.ltr);
       tp.layout();
-      tp.paint(canvas, Offset(x, y - 40));
-    }
+      tp.paint(canvas, Offset(x + offsetX, y + offsetY));
+    });
   }
 
   @override

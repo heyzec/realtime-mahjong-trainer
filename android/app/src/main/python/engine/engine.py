@@ -21,7 +21,8 @@ from trainer.objects.tile_collection import TileCollection
 
 def get_mpsz(detection: DetectionResult):
     tiles = sorted(detection, key=lambda x: x[0][0])
-    return ''.join(tile[1] for tile in tiles)
+    # Ignore tiles that we are unable to detect
+    return ''.join(tile[1] for tile in tiles if tile[1] is not None)
 
 class Engine:
     def __init__(self):
@@ -51,17 +52,17 @@ class Engine:
     def update_trainer(self, hand: TileCollection) -> Optional[str]:
         if len(hand) not in (13, 14):
             print(f"Odd hand length of {len(hand)}")
-            return
+            return None
 
         if self.trainer is None:
             print(f"First new hand: {hand}")
             self.trainer = Trainer(hand)
-            return
+            return None
 
         prev_hand = self.trainer.hand
         if hand == prev_hand:
             print(f"Hand did not change: {hand}")
-            return
+            return None
 
         diff = hand.get_difference(prev_hand)
         delta = sum(abs(x) for x in diff.values())
@@ -69,7 +70,7 @@ class Engine:
         if delta > 1:
             print(f"Change is large, hand reloaded: {diff}")
             self.trainer = Trainer(hand)
-            return
+            return None
 
         if delta != 1:
             assert False
@@ -85,11 +86,12 @@ class Engine:
         if len(hand) == 14 and len(prev_hand) == 13:
             assert change == 1
             print(f"Draw detected: {tile}")
-            self.trainer.draw(tile)
+            msg = self.trainer.draw(tile)
             assert(len(self.trainer.hand)) == 14
-            return
+            return msg
 
         print(f"Unknown action {len(hand)} -> {len(prev_hand)} change:{change}")
+        return None
 
 
     def process(self, image: CVImage) -> Optional[EngineResult]:
@@ -110,31 +112,29 @@ class Engine:
 
             commentary = self.update_trainer(hand)
 
-            shanten = self.trainer.get_shanten()
+            shanten = None
+
+            analysis = None
+            if commentary is not None:
+                assert self.trainer is not None
+                shanten = self.trainer.get_shanten()
+                analysis = {
+                    "shanten": shanten,
+                    "commentary": commentary,
+                }
 
 
-            analysis = {
-                "shanten": shanten,
+            result = {
                 "hand": mpsz,
                 "tiles": stage.result,
-                "commentary": commentary,
+                "analysis": analysis,
             }
 
             image = stage.display
-            # border = cv2.copyMakeBorder(
-            #     image,
-            #     top=10,
-            #     bottom=10,
-            #     left=10,
-            #     right=10,
-            #     borderType=cv2.BORDER_CONSTANT,
-            #     value=(0, 255, 0, 255)
-            # )
-            # image = border
 
-            json_analysis = json.dumps(analysis)
-            res = EngineResult(image=image, analysis=json_analysis, stage=stage)
-            print(analysis)
+            json_result = json.dumps(result)
+            res = EngineResult(image=image, result=json_result, stage=stage)
+            print(result)
             print(f"Processed in {time.time() - start_time}")
             return res
         except Exception as e:

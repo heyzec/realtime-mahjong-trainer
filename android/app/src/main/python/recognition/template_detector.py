@@ -1,5 +1,4 @@
 import math
-import os
 import cv2
 
 from dirs import LABELLED_DIR
@@ -33,9 +32,7 @@ class TemplateDetector(Detector):
             tile_img = self.preprocess_image(tile_img)
             # tile_img = self.crop_image(tile_img, self.detect_corners(tile_img))
 
-            labels = [basename.split('.')[0] for basename in os.listdir(LABELLED_DIR)]
-
-            best_label = "None"
+            best_label = None
             best_score = 0
             for label, img in self.targets.items():
                 target_img = self.preprocess_image(img)

@@ -13,12 +13,12 @@ from utils.stubs import CVImage
 @dataclass
 class EngineResult:
     image: CVImage
-    analysis: str
+    result: str
     stage: Stage[Any]
 
     def to_bytes(self) -> bytes:
         image_bytes: bytes = cv2.imencode('.png', self.image)[1].tobytes()
-        return (self.analysis.encode() +
+        return (self.result.encode() +
             ("\n").encode() +
         image_bytes)
 

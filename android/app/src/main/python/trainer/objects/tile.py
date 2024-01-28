@@ -16,6 +16,9 @@ class Tile:
         label = tiles34_index_to_mpsz(index)
         return Tile(label)
 
+    def __str__(self):
+        return self.name
+
     def __repr__(self):
         return f"Tile({self.name})"
 
