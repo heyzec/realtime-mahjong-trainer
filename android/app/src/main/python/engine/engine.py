@@ -67,7 +67,7 @@ class Engine:
         delta = sum(abs(x) for x in diff.values())
 
         if delta > 1:
-            print("Hand reloaded")
+            print(f"Change is large, hand reloaded: {diff}")
             self.trainer = Trainer(hand)
             return
 
@@ -134,9 +134,7 @@ class Engine:
 
             json_analysis = json.dumps(analysis)
             res = EngineResult(image=image, analysis=json_analysis, stage=stage)
-            print("=============================END Process")
             print(analysis)
-            print(image.shape)
             print(f"Processed in {time.time() - start_time}")
             return res
         except Exception as e:
