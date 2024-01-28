@@ -37,18 +37,11 @@ class TemplateDetector(Detector):
 
             best_label = "None"
             best_score = 0
-            for label in labels:
-                path = os.path.join(LABELLED_DIR, f"{label}.png")
-                assert os.path.exists(path), path
-                target_img = cv2.imread(path)
-                target_img = cv2.cvtColor(target_img, cv2.COLOR_BGR2RGB)
-                target_img = self.preprocess_image(target_img)
+            for label, img in self.targets.items():
+                target_img = self.preprocess_image(img)
 
                 score = self.compare_and_score(tile_img, target_img)
 
-                side_by_side = join_horizontal([tile_img, target_img])
-                # cv2.putText(side_by_side, f"{score:.2f}", (80, 100), fontFace=1, fontScale=3, color=(0,0,0), thickness=5)
-                # show(side_by_side)
                 if score > best_score:
                     best_label = label
                     best_score = score
@@ -81,7 +74,8 @@ class TemplateDetector(Detector):
             res = cv2.matchTemplate(img1, img2, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
             score = max_val
-        except Exception as e:
+        except cv2.error as e:
+            print(img1.shape, img2.shape, "error")
             score = 0
 
         return score

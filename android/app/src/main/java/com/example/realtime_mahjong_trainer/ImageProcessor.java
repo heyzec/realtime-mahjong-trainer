@@ -71,6 +71,10 @@ public class ImageProcessor {
         PyObject engineResult = engine.callAttr("process_bytes", encoded);
         TimedLog.i(TAG, String.format("Done python processing"));
 
+        if (engineResult == null) {
+            return;
+        }
+
         bytes = engineResult.callAttr("to_bytes").toJava(byte[].class);
         TimedLog.i(TAG, "Sending bytes to localhost:" + bytes.length);
         client.send(bytes);
