@@ -3,9 +3,8 @@ from typing import List, Tuple
 import numpy as np
 import cv2
 
-from utils.colors import MONO_WHITE, RGB_RED
-
 from .stage import Stage
+from utils.colors import MONO_WHITE, RGB_RED
 from utils.stubs import CVImage, Contour, Contours, RRects, Rect, Rects
 
 
@@ -84,7 +83,6 @@ class EdgeDetector:
         detection_canvas = np.zeros((w,h), np.uint8)
         # canvas = image
         tile_points = []
-        print(w, h)
 
         def distanceCalculate(p1, p2):
             """p1 and p2 in format (x1,y1) and (x2,y2) tuples"""
@@ -119,14 +117,9 @@ class EdgeDetector:
         if linesP is None:
             return stage.next([], None)
 
-        print(linesP)
         l = max(linesP, key=lambda l: distanceCalculate((l[0][0], l[0][1]), (l[0][2], l[0][3])))
-        # cv2.line(canvas, (l[0], l[1]), (l[2], l[3]), (255,), 1, cv2.LINE_AA)
 
-
-        print(l)
         x1, y1, x2, y2 = l[0].astype(int)
-
 
         a = y2 - y1
         b = x1 - x2
@@ -141,7 +134,6 @@ class EdgeDetector:
         centers = []
         for (p1, p2) in tile_points:
             center = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
-            # center = ((p1 + p2)/2).astype(int)
             centers.append(center)
 
         MARGIN = 10
@@ -150,10 +142,7 @@ class EdgeDetector:
                 continue
             filtered.append(contour)
 
-
-
         contours = filtered
-
 
 
         def display():
@@ -163,32 +152,4 @@ class EdgeDetector:
             canvas = cv2.drawContours(canvas, contours, -1, RGB_RED, thickness=2)
             return canvas
         return stage.next(contours, display)
-
-
-
-
-
-    # def extract_tiles_bounds(self):
-    #     img_height, img_width, _ = image.shape
-    #     n_channels = 4
-    #     transparency: CVImage = np.zeros((img_height, img_width, n_channels), dtype=np.uint8)
-
-    #     output: List[Rect] = []
-
-    #     for contour in contours:
-    #         rect: Rect = cv2.boundingRect(contour)
-    #         area: int = cv2.contourArea(contour)
-
-    #         if not 16400 <= area < 16800:
-    #             continue
-
-    #         output.append(rect)
-
-    #         x,y,w,h = rect
-    #         cv2.drawContours(transparency, [contour], -1, (0, 255, 0), 2)
-    #         cv2.putText(transparency, str(area), (int(x+0.5*w),int(y+random.random()*h)), 0, fontScale=1, color=(0,255,0), thickness=3)
-
-
-    #     # show(drawed)
-    #     return transparency, output
 

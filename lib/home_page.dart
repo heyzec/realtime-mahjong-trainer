@@ -63,7 +63,6 @@ class _HomePageState extends State<HomePage> {
       overlayTitle: "X-SLAYER",
       overlayContent: 'Overlay Enabled',
       flag: OverlayFlag.clickThrough,
-      // flag: OverlayFlag.defaultFlag,
       visibility: NotificationVisibility.visibilityPublic,
       positionGravity: PositionGravity.auto,
       width: WindowSize.matchParent,
@@ -97,9 +96,6 @@ class _HomePageState extends State<HomePage> {
       ),
       body: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          print("MAIN=============================");
-          print(devicePixelRatio * constraints.maxHeight);
-          print(devicePixelRatio * constraints.maxWidth);
           return Center(
             child: Column(
               children: [

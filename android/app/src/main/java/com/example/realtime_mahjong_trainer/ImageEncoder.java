@@ -26,7 +26,6 @@ public class ImageEncoder {
   private static Bitmap imageToBitmap(Image image) {
     int width = image.getWidth();
     int height = image.getHeight();
-    TimedLog.i(TAG, String.format("=============width %d height %d", width, height));
 
     // This class is hardcoded to only able to accept this format.
     if (image.getFormat() != HardwareBuffer.RGBA_8888) {
@@ -45,7 +44,6 @@ public class ImageEncoder {
     );
     bitmap.copyPixelsFromBuffer(buffer);
     bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-    TimedLog.i(TAG, String.format("=============width %d height %d", bitmap.getWidth(), bitmap.getHeight()));
     return bitmap;
   }
 

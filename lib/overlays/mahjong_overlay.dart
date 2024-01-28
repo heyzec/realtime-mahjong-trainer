@@ -84,9 +84,6 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
           setState(() {
             imageWidth = info.image.width;
             imageHeight = info.image.height;
-            print("=====================================================IMG");
-            print(imageHeight);
-            print(imageWidth);
           });
         }));
       },
@@ -97,15 +94,10 @@ class _MahjongOverlayState extends State<MahjongOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    print("Build overlay");
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-      print(
-          "=====================================================Constrtraints");
-      print(constraints.maxHeight * devicePixelRatio);
-      print(constraints.maxWidth * devicePixelRatio);
 
       if (!ready) {
         return Text("");
